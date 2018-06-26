@@ -2,6 +2,7 @@ package us.ihmc.avatar.joystickBasedJavaFXController;
 
 import java.io.IOException;
 
+import controller_msgs.msg.dds.PlanarRegionsListMessage;
 import controller_msgs.msg.dds.RobotConfigurationData;
 import javafx.animation.AnimationTimer;
 import javafx.fxml.FXML;
@@ -22,6 +23,7 @@ import us.ihmc.javaFXToolkit.cameraControllers.FocusBasedCameraMouseEventHandler
 import us.ihmc.javaFXToolkit.messager.JavaFXMessager;
 import us.ihmc.javaFXToolkit.messager.SharedMemoryJavaFXMessager;
 import us.ihmc.javaFXToolkit.scenes.View3DFactory;
+import us.ihmc.robotEnvironmentAwareness.communication.REACommunicationProperties;
 import us.ihmc.robotModels.FullHumanoidRobotModelFactory;
 import us.ihmc.ros2.Ros2Node;
 
@@ -30,11 +32,12 @@ public class JoystickBasedSteppingMainUI
    private final Stage primaryStage;
    private final BorderPane mainPane;
 
-   private final JavaFXRobotVisualizer javaFXRobotVisualizer;
+   private final JavaFXRobotVisualizer robotVisualizer;
    private final StepGeneratorJavaFXController stepGeneratorJavaFXController;
    private final AnimationTimer cameraTracking;
    private final JavaFXMessager messager = new SharedMemoryJavaFXMessager(StepGeneratorJavaFXTopics.API);
    private final XBoxOneJavaFXController xBoxOneJavaFXController;
+   private final JavaFXPlanarRegionsViewer planarRegionsViewer;
 
    @FXML
    private StepGeneratorParametersPaneController stepGeneratorParametersPaneController;
@@ -59,10 +62,15 @@ public class JoystickBasedSteppingMainUI
       Pane subScene = view3dFactory.getSubSceneWrappedInsidePane();
       mainPane.setCenter(subScene);
 
-      javaFXRobotVisualizer = new JavaFXRobotVisualizer(fullRobotModelFactory);
+      robotVisualizer = new JavaFXRobotVisualizer(fullRobotModelFactory);
       ROS2Tools.createCallbackSubscription(ros2Node, RobotConfigurationData.class, ControllerAPIDefinition.getPublisherTopicNameGenerator(robotName),
-                                           s -> javaFXRobotVisualizer.submitNewConfiguration(s.takeNextData()));
-      view3dFactory.addNodeToView(javaFXRobotVisualizer.getRootNode());
+                                           s -> robotVisualizer.submitNewConfiguration(s.takeNextData()));
+      view3dFactory.addNodeToView(robotVisualizer.getRootNode());
+
+      planarRegionsViewer = new JavaFXPlanarRegionsViewer();
+      ROS2Tools.createCallbackSubscription(ros2Node, PlanarRegionsListMessage.class, REACommunicationProperties.publisherTopicNameGenerator,
+                                           s -> planarRegionsViewer.submitPlanarRegions(s.takeNextData()));
+      view3dFactory.addNodeToView(planarRegionsViewer.getRootNode());
 
       Translate rootJointOffset = new Translate();
       cameraController.prependTransform(rootJointOffset);
@@ -72,7 +80,7 @@ public class JoystickBasedSteppingMainUI
          @Override
          public void handle(long now)
          {
-            FramePoint3D rootJointPosition = new FramePoint3D(javaFXRobotVisualizer.getFullRobotModel().getRootJoint().getFrameAfterJoint());
+            FramePoint3D rootJointPosition = new FramePoint3D(robotVisualizer.getFullRobotModel().getRootJoint().getFrameAfterJoint());
             rootJointPosition.changeFrame(ReferenceFrame.getWorldFrame());
             rootJointOffset.setX(rootJointPosition.getX());
             rootJointOffset.setY(rootJointPosition.getY());
@@ -80,7 +88,7 @@ public class JoystickBasedSteppingMainUI
          }
       };
 
-      stepGeneratorJavaFXController = new StepGeneratorJavaFXController(robotName, messager, walkingControllerParameters, ros2Node, javaFXRobotVisualizer,
+      stepGeneratorJavaFXController = new StepGeneratorJavaFXController(robotName, messager, walkingControllerParameters, ros2Node, robotVisualizer,
                                                                         kickMessenger, punchMessenger, lowLevelMessenger);
       view3dFactory.addNodeToView(stepGeneratorJavaFXController.getRootNode());
 
@@ -102,9 +110,10 @@ public class JoystickBasedSteppingMainUI
    public void start() throws IOException
    {
       primaryStage.show();
-      javaFXRobotVisualizer.start();
+      robotVisualizer.start();
       stepGeneratorJavaFXController.start();
       cameraTracking.start();
+      planarRegionsViewer.start();
    }
 
    public void stop()
@@ -118,9 +127,10 @@ public class JoystickBasedSteppingMainUI
          e.printStackTrace();
       }
       xBoxOneJavaFXController.stop();
-      javaFXRobotVisualizer.stop();
+      robotVisualizer.stop();
       stepGeneratorJavaFXController.stop();
       cameraTracking.stop();
+      planarRegionsViewer.stop();
       ThreadTools.sleep(100); // Give some time to send the message.:
    }
 }
