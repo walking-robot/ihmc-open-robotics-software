@@ -193,7 +193,7 @@ public class StepGeneratorJavaFXController
       });
    }
 
-   private FramePose3DReadOnly adjustFootstep(FramePose2DReadOnly footstepPose)
+   private FramePose3DReadOnly adjustFootstep(FramePose2DReadOnly footstepPose, RobotSide footSide)
    {
       FramePose3D adjustedPose = new FramePose3D();
       adjustedPose.getPosition().set(footstepPose.getPosition());
