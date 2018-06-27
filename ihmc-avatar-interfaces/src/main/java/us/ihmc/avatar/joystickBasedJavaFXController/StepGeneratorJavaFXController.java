@@ -40,6 +40,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Mesh;
 import javafx.scene.shape.MeshView;
+import us.ihmc.commonWalkingControlModules.configurations.SteppingParameters;
 import us.ihmc.commonWalkingControlModules.configurations.WalkingControllerParameters;
 import us.ihmc.commonWalkingControlModules.desiredFootStep.footstepGenerator.ContinuousStepGenerator;
 import us.ihmc.commonWalkingControlModules.highLevelHumanoidControl.factories.ControllerAPIDefinition;
@@ -67,6 +68,7 @@ import us.ihmc.robotics.robotSide.RobotSide;
 import us.ihmc.robotics.robotSide.SideDependentList;
 import us.ihmc.ros2.Ros2Node;
 import us.ihmc.yoVariables.providers.BooleanProvider;
+import us.ihmc.yoVariables.providers.DoubleProvider;
 
 public class StepGeneratorJavaFXController
 {
@@ -91,12 +93,13 @@ public class StepGeneratorJavaFXController
    private final AtomicReference<Double> trajectoryDuration;
    private final AtomicBoolean isWalking = new AtomicBoolean(false);
    private final JavaFXRobotVisualizer javaFXRobotVisualizer;
-   private final double inPlaceStepWidth;
+   private final double inPlaceStepWidth, maxStepLength, maxStepWidth, maxAngleTurnInwards, maxAngleTurnOutwards;
 
    private final AtomicBoolean isLeftFootInSupport = new AtomicBoolean(false);
    private final AtomicBoolean isRightFootInSupport = new AtomicBoolean(false);
    private final SideDependentList<AtomicBoolean> isFootInSupport = new SideDependentList<>(isLeftFootInSupport, isRightFootInSupport);
    private final BooleanProvider isInDoubleSupport = () -> isLeftFootInSupport.get() && isRightFootInSupport.get();
+   private final DoubleProvider stepTime;
 
    public enum SecondaryControlOption
    {
@@ -128,10 +131,16 @@ public class StepGeneratorJavaFXController
       continuousStepGenerator.setDesiredTurningVelocityProvider(() -> turningVelocityProperty.get());
       continuousStepGenerator.setDesiredVelocityProvider(() -> new Vector2D(forwardVelocityProperty.get(), lateralVelocityProperty.get()));
       continuousStepGenerator.configureWith(walkingControllerParameters);
-      inPlaceStepWidth = walkingControllerParameters.getSteppingParameters().getInPlaceWidth();
       continuousStepGenerator.setFootstepAdjustment(this::adjustFootstep);
       continuousStepGenerator.setFootstepMessenger(this::prepareFootsteps);
       continuousStepGenerator.setFootPoseProvider(robotSide -> new FramePose3D(javaFXRobotVisualizer.getFullRobotModel().getSoleFrame(robotSide)));
+
+      SteppingParameters steppingParameters = walkingControllerParameters.getSteppingParameters();
+      inPlaceStepWidth = steppingParameters.getInPlaceWidth();
+      maxStepLength = steppingParameters.getMaxStepLength();
+      maxStepWidth = steppingParameters.getMaxStepWidth();
+      maxAngleTurnInwards = steppingParameters.getMaxAngleTurnInwards();
+      maxAngleTurnOutwards = steppingParameters.getMaxAngleTurnOutwards();
 
       ROS2Tools.MessageTopicNameGenerator controllerPubGenerator = ControllerAPIDefinition.getPublisherTopicNameGenerator(robotName);
       ROS2Tools.MessageTopicNameGenerator controllerSubGenerator = ControllerAPIDefinition.getSubscriberTopicNameGenerator(robotName);
@@ -148,6 +157,7 @@ public class StepGeneratorJavaFXController
       swingDuration = messager.createInput(WalkingSwingDuration, walkingControllerParameters.getDefaultSwingTime());
       transferDuration = messager.createInput(WalkingTransferDuration, walkingControllerParameters.getDefaultTransferTime());
       trajectoryDuration = messager.createInput(WalkingTrajectoryDuration, 1.0);
+      stepTime = () -> swingDuration.get() + transferDuration.get();
 
       animationTimer = new AnimationTimer()
       {
@@ -252,19 +262,19 @@ public class StepGeneratorJavaFXController
 
    private void updateForwardVelocity(double alpha)
    {
-      double minMaxVelocity = 0.30;
+      double minMaxVelocity = maxStepLength / stepTime.getValue();
       forwardVelocityProperty.set(minMaxVelocity * MathTools.clamp(alpha, 1.0));
    }
 
    private void updateLateralVelocity(double alpha)
    {
-      double minMaxVelocity = 0.30;
+      double minMaxVelocity = maxStepWidth / stepTime.getValue();
       lateralVelocityProperty.set(minMaxVelocity * MathTools.clamp(alpha, 1.0));
    }
 
    private void updateTurningVelocity(double alpha)
    {
-      double minMaxVelocity = Math.PI / 4.0;
+      double minMaxVelocity = (maxAngleTurnOutwards - maxAngleTurnInwards) / stepTime.getValue();
       if (forwardVelocityProperty.get() < -1.0e-10)
          alpha = -alpha;
       turningVelocityProperty.set(minMaxVelocity * MathTools.clamp(alpha, 1.0));
