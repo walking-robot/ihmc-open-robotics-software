@@ -25,7 +25,6 @@ public class WholeBodyInverseKinematicsSolver
    private final YoVariableRegistry registry = new YoVariableRegistry(getClass().getSimpleName());
 
    private final InverseKinematicsOptimizationControlModule optimizationControlModule;
-   private final RobotJointVelocityAccelerationIntegrator integrator;
 
    private final RootJointDesiredConfigurationData rootJointDesiredConfiguration = new RootJointDesiredConfigurationData();
    private final LowLevelOneDoFJointDesiredDataHolder lowLevelOneDoFJointDesiredDataHolder = new LowLevelOneDoFJointDesiredDataHolder();
@@ -49,7 +48,6 @@ public class WholeBodyInverseKinematicsSolver
       lowLevelOneDoFJointDesiredDataHolder.setJointsControlMode(controlledOneDoFJoints, JointDesiredControlMode.EFFORT);
 
       optimizationControlModule = new InverseKinematicsOptimizationControlModule(toolbox, registry);
-      integrator = new RobotJointVelocityAccelerationIntegrator(toolbox.getControlDT());
 
       jointVelocityIntegrationCalculator = new JointVelocityIntegrationCalculator(toolbox.getControlDT(), registry);
 
@@ -89,10 +87,16 @@ public class WholeBodyInverseKinematicsSolver
 
       DenseMatrix64F jointVelocities = inverseKinematicsSolution.getJointVelocities();
 
+<<<<<<< HEAD
       integrator.integrateJointVelocities(jointsToOptimizeFor, jointVelocities);
 
       DenseMatrix64F jointConfigurations = integrator.getJointConfigurations();
       jointVelocities = integrator.getJointVelocities();
+=======
+      SpatialForceVector centroidalMomentumSolution = inverseKinematicsSolution.getCentroidalMomentumSolution();
+      yoAchievedMomentumLinear.set(centroidalMomentumSolution.getLinearPart());
+      yoAchievedMomentumAngular.set(centroidalMomentumSolution.getAngularPart());
+>>>>>>> f949044f6f... removed the old integrator and cleaned up the whole body ik solver
 
       updateLowLevelData(jointVelocities);
 
@@ -101,29 +105,7 @@ public class WholeBodyInverseKinematicsSolver
          OneDoFJoint joint = controlledOneDoFJoints[i];
          jointPositionsSolution.get(joint).set(lowLevelOneDoFJointDesiredDataHolder.getDesiredJointPosition(joint));
       }
-      /*
-      if (rootJoint != null)
-      {
-         int[] rootJointIndices = jointIndexHandler.getJointIndices(rootJoint);
-         rootJointDesiredConfiguration.setDesiredConfiguration(jointConfigurations, rootJointIndices[0]);
-         rootJointDesiredConfiguration.setDesiredVelocity(jointVelocities, rootJointIndices[0]);
-      }
 
-      for (int i = 0; i < controlledOneDoFJoints.length; i++)
-      {
-         OneDoFJoint joint = controlledOneDoFJoints[i];
-         int jointIndex = jointIndexHandler.getOneDoFJointIndex(joint);
-         double desiredVelocity = jointVelocities.get(jointIndex, 0);
-         lowLevelOneDoFJointDesiredDataHolder.setDesiredJointVelocity(joint, desiredVelocity);
-         jointVelocitiesSolution.get(joint).set(desiredVelocity);
-
-         if (rootJoint != null)
-            jointIndex++; // Because of quaternion :/
-         double desiredPosition = jointConfigurations.get(jointIndex, 0);
-         lowLevelOneDoFJointDesiredDataHolder.setDesiredJointPosition(joint, desiredPosition);
-         jointPositionsSolution.get(joint).set(desiredPosition);
-      }
-      */
    }
 
    private void updateLowLevelData(DenseMatrix64F jointVelocities)
@@ -141,27 +123,15 @@ public class WholeBodyInverseKinematicsSolver
          double desiredVelocity = jointVelocities.get(jointIndex, 0);
          lowLevelOneDoFJointDesiredDataHolder.setDesiredJointVelocity(joint, desiredVelocity);
          jointVelocitiesSolution.get(joint).set(desiredVelocity);
-
-//         if (rootJoint != null)
-//            jointIndex++; // Because of quaternion :/
-//         double desiredPosition = jointConfigurations.get(jointIndex, 0);
-//         lowLevelOneDoFJointDesiredDataHolder.setDesiredJointPosition(joint, desiredPosition);
-//         jointPositionsSolution.get(joint).set(desiredPosition);
       }
 
-
-
       jointVelocityIntegrationCalculator.computeAndUpdateDataHolder(lowLevelOneDoFJointDesiredDataHolder);
-
-//      if (rootJoint != null)
-//      {
-//         int[] rootJointIndices = jointIndexHandler.getJointIndices(rootJoint);
-//         rootJointDesiredConfiguration.setDesiredConfiguration(jointConfigurations, rootJointIndices[0]);
-//         rootJointDesiredConfiguration.setDesiredVelocity(jointVelocities, rootJointIndices[0]);
-//      }
    }
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> f949044f6f... removed the old integrator and cleaned up the whole body ik solver
    public void submitInverseKinematicsCommandList(InverseKinematicsCommandList inverseKinematicsCommandList)
    {
       while (inverseKinematicsCommandList.getNumberOfCommands() > 0)
