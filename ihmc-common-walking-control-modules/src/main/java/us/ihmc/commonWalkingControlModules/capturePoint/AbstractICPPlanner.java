@@ -632,6 +632,10 @@ public abstract class AbstractICPPlanner implements ICPPlannerInterface
    @Override
    public boolean isDone()
    {
+      if (timeInCurrentStateRemaining.isNaN())
+      {
+         return true;
+      }
       return timeInCurrentStateRemaining.getDoubleValue() <= 0.0;
    }
 
