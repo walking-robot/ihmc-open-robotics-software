@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<GridPane xmlns:fx="http://javafx.com/fxml" prefHeight="200"
+	prefWidth="800" alignment="center" fx:controller="us.ihmc.avatar.joystickBasedJavaFXController.GraspingPaneController">
+
+	<fx:include fx:id="graspingObjectPane" source="GraspingObjectPane.fxml" GridPane.columnIndex="0"
+		GridPane.rowIndex="0" />
+	<fx:include fx:id="graspingToolboxPane" source="GraspingToolboxPane.fxml" GridPane.columnIndex="1"
+		GridPane.rowIndex="0" />
+	<fx:include fx:id="graspingFingerPane" source="GraspingFingerPane.fxml" GridPane.columnIndex="2"
+		GridPane.rowIndex="0" />
+
+</GridPane>
+
