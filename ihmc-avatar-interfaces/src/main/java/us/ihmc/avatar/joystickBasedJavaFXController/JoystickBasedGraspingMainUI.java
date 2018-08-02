@@ -10,7 +10,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import us.ihmc.commonWalkingControlModules.highLevelHumanoidControl.factories.ControllerAPIDefinition;
-import us.ihmc.commons.PrintTools;
 import us.ihmc.commons.thread.ThreadTools;
 import us.ihmc.communication.ROS2Tools;
 import us.ihmc.javaFXToolkit.cameraControllers.FocusBasedCameraMouseEventHandler;
@@ -24,7 +23,7 @@ public class JoystickBasedGraspingMainUI
 {
    private final Stage primaryStage;
    private final BorderPane mainPane;
-   
+
    private final GraspingJavaFXController graspingJavaFXController;
    private final JavaFXRobotVisualizer javaFXRobotVisualizer;
 
@@ -33,7 +32,7 @@ public class JoystickBasedGraspingMainUI
 
    @FXML
    private GraspingPaneController graspingPaneController;
-   
+
    public JoystickBasedGraspingMainUI(String robotName, Stage primaryStage, Ros2Node ros2Node, FullHumanoidRobotModelFactory fullRobotModelFactory)
          throws Exception
    {
@@ -59,11 +58,11 @@ public class JoystickBasedGraspingMainUI
 
       graspingJavaFXController = new GraspingJavaFXController(messager);
       view3dFactory.addNodeToView(graspingJavaFXController.getRootNode());
-      
+
       messager.startMessager();
-      
+
       graspingPaneController.initialize(messager);
-      
+
       primaryStage.setTitle(getClass().getSimpleName());
       primaryStage.setScene(new Scene(mainPane, 800, 600));
       primaryStage.setOnCloseRequest(event -> stop());
@@ -91,9 +90,9 @@ public class JoystickBasedGraspingMainUI
       }
       xBoxOneJavaFXController.stop();
       javaFXRobotVisualizer.stop();
-      
+
       graspingJavaFXController.stop();
-      
+
       ThreadTools.sleep(100); // Give some time to send the message.:
    }
 }
