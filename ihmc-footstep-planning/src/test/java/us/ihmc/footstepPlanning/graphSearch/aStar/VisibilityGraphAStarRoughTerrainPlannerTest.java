@@ -1,4 +1,4 @@
-package us.ihmc.footstepPlanning.graphSearch;
+package us.ihmc.footstepPlanning.graphSearch.aStar;
 
 import org.junit.After;
 import org.junit.Before;
@@ -7,11 +7,11 @@ import us.ihmc.continuousIntegration.ContinuousIntegrationAnnotations;
 import us.ihmc.continuousIntegration.ContinuousIntegrationTools;
 import us.ihmc.euclid.geometry.ConvexPolygon2D;
 import us.ihmc.footstepPlanning.FootstepPlanner;
-import us.ihmc.footstepPlanning.graphSearch.aStar.FootstepNodeVisualization;
 import us.ihmc.footstepPlanning.graphSearch.nodeExpansion.ParameterBasedNodeExpansion;
 import us.ihmc.footstepPlanning.graphSearch.planners.VisibilityGraphWithAStarPlanner;
 import us.ihmc.footstepPlanning.roughTerrainPlanning.FootstepPlannerOnRoughTerrainTest;
 import us.ihmc.footstepPlanning.testTools.PlanningTestTools;
+import us.ihmc.graphicsDescription.yoGraphics.YoGraphicsListRegistry;
 import us.ihmc.robotics.robotSide.SideDependentList;
 import us.ihmc.yoVariables.registry.YoVariableRegistry;
 
@@ -98,8 +98,9 @@ public class VisibilityGraphAStarRoughTerrainPlannerTest extends FootstepPlanner
       SideDependentList<ConvexPolygon2D> footPolygons = PlanningTestTools.createDefaultFootPolygons();
       ParameterBasedNodeExpansion expansion = new ParameterBasedNodeExpansion(getParameters());
 
-      planner = VisibilityGraphWithAStarPlanner.createRoughTerrainPlanner(getParameters(), footPolygons, visualization, null,new YoVariableRegistry("TestRegistry") );
-//      planner = AStarFootstepPlanner.createRoughTerrainPlanner(getParameters(), visualization, footPolygons, expansion, new YoVariableRegistry("TestRegistry"));
+      registry = new YoVariableRegistry("TestRegistry");
+      yoGraphicsListRegistry = new YoGraphicsListRegistry();
+      planner = VisibilityGraphWithAStarPlanner.createRoughTerrainPlanner(getParameters(), footPolygons, visualization, yoGraphicsListRegistry, registry);
    }
 
    @After
