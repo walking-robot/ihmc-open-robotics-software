@@ -56,7 +56,7 @@ public class JoystickBasedGraspingMainUI
                                            s -> javaFXRobotVisualizer.submitNewConfiguration(s.takeNextData()));
       view3dFactory.addNodeToView(javaFXRobotVisualizer.getRootNode());
 
-      graspingJavaFXController = new GraspingJavaFXController(messager);
+      graspingJavaFXController = new GraspingJavaFXController(robotName, messager, ros2Node, fullRobotModelFactory);
       view3dFactory.addNodeToView(graspingJavaFXController.getRootNode());
 
       messager.startMessager();
