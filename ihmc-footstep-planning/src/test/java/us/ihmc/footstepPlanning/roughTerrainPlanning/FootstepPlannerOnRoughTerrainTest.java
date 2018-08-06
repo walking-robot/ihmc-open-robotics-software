@@ -20,6 +20,7 @@ import us.ihmc.footstepPlanning.DefaultFootstepPlanningParameters;
 import us.ihmc.footstepPlanning.FootstepPlan;
 import us.ihmc.footstepPlanning.FootstepPlanner;
 import us.ihmc.footstepPlanning.graphSearch.FootstepPlannerParameters;
+import us.ihmc.graphicsDescription.yoGraphics.YoGraphicsListRegistry;
 import us.ihmc.simulationConstructionSetTools.util.planarRegions.PlanarRegionsListExamples;
 import us.ihmc.footstepPlanning.testTools.PlanningTest;
 import us.ihmc.footstepPlanning.testTools.PlanningTestTools;
@@ -28,11 +29,15 @@ import us.ihmc.robotics.geometry.PlanarRegionsListGenerator;
 import us.ihmc.robotics.geometry.RigidBodyTransformGenerator;
 import us.ihmc.robotics.random.RandomGeometry;
 import us.ihmc.robotics.robotSide.RobotSide;
+import us.ihmc.yoVariables.registry.YoVariableRegistry;
 
 public abstract class FootstepPlannerOnRoughTerrainTest implements PlanningTest
 {
    private static final Random random = new Random(42747621889239430L);
    protected static final ReferenceFrame worldFrame = ReferenceFrame.getWorldFrame();
+
+   protected YoGraphicsListRegistry yoGraphicsListRegistry;
+   protected YoVariableRegistry registry;
 
    public void testOnStaircase()
    {
@@ -53,7 +58,7 @@ public abstract class FootstepPlannerOnRoughTerrainTest implements PlanningTest
       // run the test
       FootstepPlan footstepPlan = PlanningTestTools.runPlanner(getPlanner(), initialStanceFootPose, initialStanceSide, goalPose, stairCase, assertPlannerReturnedResult);
       if (visualize())
-         PlanningTestTools.visualizeAndSleep(stairCase, footstepPlan, goalPose);
+         PlanningTestTools.visualizeAndSleep(stairCase, footstepPlan, goalPose, null, registry, yoGraphicsListRegistry);
 
       if(assertPlannerReturnedResult)
          assertTrue(PlanningTestTools.isGoalNextToLastStep(goalPose, footstepPlan));
@@ -85,7 +90,7 @@ public abstract class FootstepPlannerOnRoughTerrainTest implements PlanningTest
       FootstepPlanner planner = getPlanner();
       FootstepPlan footstepPlan = PlanningTestTools.runPlanner(planner, initialStanceFootPose, initialStanceSide, goalPose, regions, assertPlannerReturnedResult);
       if (visualize())
-         PlanningTestTools.visualizeAndSleep(regions, footstepPlan, goalPose);
+         PlanningTestTools.visualizeAndSleep(regions, footstepPlan, goalPose, null, registry, yoGraphicsListRegistry);
 
       if(assertPlannerReturnedResult)
          assertTrue(PlanningTestTools.isGoalNextToLastStep(goalPose, footstepPlan));
@@ -121,7 +126,7 @@ public abstract class FootstepPlannerOnRoughTerrainTest implements PlanningTest
       FootstepPlanner planner = getPlanner();
       FootstepPlan footstepPlan = PlanningTestTools.runPlanner(planner, initialStanceFootPose, initialStanceSide, goalPose, regions, assertPlannerReturnedResult);
       if (visualize())
-         PlanningTestTools.visualizeAndSleep(regions, footstepPlan, goalPose);
+         PlanningTestTools.visualizeAndSleep(regions, footstepPlan, goalPose, null, registry, yoGraphicsListRegistry);
 
       if(assertPlannerReturnedResult)
          assertTrue(PlanningTestTools.isGoalNextToLastStep(goalPose, footstepPlan));
@@ -157,7 +162,7 @@ public abstract class FootstepPlannerOnRoughTerrainTest implements PlanningTest
 
       if (visualize())
       {
-         PlanningTestTools.visualizeAndSleep(cinderBlockField, footstepPlan, goalPose);
+         PlanningTestTools.visualizeAndSleep(cinderBlockField, footstepPlan, goalPose, null, registry, yoGraphicsListRegistry);
       }
 
       assertTrue(PlanningTestTools.isGoalNextToLastStep(goalPose, footstepPlan));
@@ -222,7 +227,7 @@ public abstract class FootstepPlannerOnRoughTerrainTest implements PlanningTest
 
       if (visualize())
       {
-         PlanningTestTools.visualizeAndSleep(cinderBlockField, footstepPlan, goalPose);
+         PlanningTestTools.visualizeAndSleep(cinderBlockField, footstepPlan, goalPose, null, registry, yoGraphicsListRegistry);
       }
 
       assertTrue(PlanningTestTools.isGoalNextToLastStep(goalPose, footstepPlan));
@@ -293,7 +298,7 @@ public abstract class FootstepPlannerOnRoughTerrainTest implements PlanningTest
 
       if (visualize())
       {
-         PlanningTestTools.visualizeAndSleep(cinderBlockField, footstepPlan, goalPose);
+         PlanningTestTools.visualizeAndSleep(cinderBlockField, footstepPlan, goalPose, null, registry, yoGraphicsListRegistry);
       }
 
       assertTrue(PlanningTestTools.isGoalNextToLastStep(goalPose, footstepPlan, 0.06));
@@ -336,7 +341,7 @@ public abstract class FootstepPlannerOnRoughTerrainTest implements PlanningTest
 
       if (visualize())
       {
-         PlanningTestTools.visualizeAndSleep(cinderBlockField, footstepPlan, goalPose);
+         PlanningTestTools.visualizeAndSleep(cinderBlockField, footstepPlan, goalPose, null, registry, yoGraphicsListRegistry);
       }
 
       assertTrue(PlanningTestTools.isGoalNextToLastStep(goalPose, footstepPlan));
@@ -368,7 +373,7 @@ public abstract class FootstepPlannerOnRoughTerrainTest implements PlanningTest
       PlanarRegionsList planarRegionsList = generator.getPlanarRegionsList();
       FootstepPlan footstepPlan = PlanningTestTools.runPlanner(getPlanner(), initialStanceFootPose, initialStanceSide, goalPose, planarRegionsList, assertPlannerReturnedResult);
       if (visualize())
-         PlanningTestTools.visualizeAndSleep(planarRegionsList, footstepPlan, goalPose);
+         PlanningTestTools.visualizeAndSleep(planarRegionsList, footstepPlan, goalPose, null, registry, yoGraphicsListRegistry);
       assertTrue(PlanningTestTools.isGoalNextToLastStep(goalPose, footstepPlan));
    }
 
@@ -408,7 +413,7 @@ public abstract class FootstepPlannerOnRoughTerrainTest implements PlanningTest
       PlanarRegionsList planarRegionsList = generator.getPlanarRegionsList();
       FootstepPlan footstepPlan = PlanningTestTools.runPlanner(getPlanner(), initialStanceFootPose, initialStanceSide, goalPose, planarRegionsList, assertPlannerReturnedResult);
       if (visualize())
-         PlanningTestTools.visualizeAndSleep(planarRegionsList, footstepPlan, goalPose);
+         PlanningTestTools.visualizeAndSleep(planarRegionsList, footstepPlan, goalPose, null, registry, yoGraphicsListRegistry);
       assertTrue(PlanningTestTools.isGoalNextToLastStep(goalPose, footstepPlan));
    }
 
@@ -430,7 +435,7 @@ public abstract class FootstepPlannerOnRoughTerrainTest implements PlanningTest
       PlanarRegionsList planarRegionsList = generateRandomTerrain(random);
       FootstepPlan footstepPlan = PlanningTestTools.runPlanner(getPlanner(), initialStanceFootPose, initialStanceSide, goalPose, planarRegionsList, assertPlannerReturnedResult);
       if (visualize())
-         PlanningTestTools.visualizeAndSleep(planarRegionsList, footstepPlan, goalPose);
+         PlanningTestTools.visualizeAndSleep(planarRegionsList, footstepPlan, goalPose, null, registry, yoGraphicsListRegistry);
    }
 
    public void testSimpleGaps()
@@ -471,7 +476,7 @@ public abstract class FootstepPlannerOnRoughTerrainTest implements PlanningTest
       PlanarRegionsList planarRegionsList = generator.getPlanarRegionsList();
       FootstepPlan footstepPlan = PlanningTestTools.runPlanner(getPlanner(), initialStanceFootPose, initialStanceSide, goalPose, planarRegionsList, assertPlannerReturnedResult);
       if (visualize())
-         PlanningTestTools.visualizeAndSleep(planarRegionsList, footstepPlan, goalPose);
+         PlanningTestTools.visualizeAndSleep(planarRegionsList, footstepPlan, goalPose, null, registry, yoGraphicsListRegistry);
       assertTrue(PlanningTestTools.isGoalNextToLastStep(goalPose, footstepPlan));
    }
 
@@ -511,7 +516,7 @@ public abstract class FootstepPlannerOnRoughTerrainTest implements PlanningTest
       PlanarRegionsList planarRegionsList = generator.getPlanarRegionsList();
       FootstepPlan footstepPlan = PlanningTestTools.runPlanner(getPlanner(), initialStanceFootPose, initialStanceSide, goalPose, planarRegionsList, assertPlannerReturnedResult);
       if (visualize())
-         PlanningTestTools.visualizeAndSleep(planarRegionsList, footstepPlan, goalPose);
+         PlanningTestTools.visualizeAndSleep(planarRegionsList, footstepPlan, goalPose, null, registry, yoGraphicsListRegistry);
       assertTrue(PlanningTestTools.isGoalNextToLastStep(goalPose, footstepPlan));
    }
 
@@ -533,7 +538,7 @@ public abstract class FootstepPlannerOnRoughTerrainTest implements PlanningTest
       FootstepPlan footstepPlan = PlanningTestTools.runPlanner(getPlanner(), initialStanceFootPose, initialStanceSide, goalPose, planarRegionsList,
             !visualize());
       if (visualize())
-         PlanningTestTools.visualizeAndSleep(planarRegionsList, footstepPlan, goalPose);
+         PlanningTestTools.visualizeAndSleep(planarRegionsList, footstepPlan, goalPose, null, registry, yoGraphicsListRegistry);
       assertTrue(PlanningTestTools.isGoalNextToLastStep(goalPose, footstepPlan));
    }
 
@@ -597,7 +602,7 @@ public abstract class FootstepPlannerOnRoughTerrainTest implements PlanningTest
       FootstepPlan footstepPlan = PlanningTestTools.runPlanner(getPlanner(), initialStanceFootPose, initialStanceSide, goalPose, planarRegionsList,
             !visualize());
       if (visualize())
-         PlanningTestTools.visualizeAndSleep(planarRegionsList, footstepPlan, goalPose);
+         PlanningTestTools.visualizeAndSleep(planarRegionsList, footstepPlan, goalPose, null, registry, yoGraphicsListRegistry);
       assertTrue(PlanningTestTools.isGoalNextToLastStep(goalPose, footstepPlan));
    }
 
@@ -631,7 +636,7 @@ public abstract class FootstepPlannerOnRoughTerrainTest implements PlanningTest
       FootstepPlan footstepPlan = PlanningTestTools.runPlanner(getPlanner(), initialStanceFootPose, initialStanceSide, goalPose, planarRegionsList,
             !visualize());
       if (visualize())
-         PlanningTestTools.visualizeAndSleep(planarRegionsList, footstepPlan, goalPose);
+         PlanningTestTools.visualizeAndSleep(planarRegionsList, footstepPlan, goalPose, null, registry, yoGraphicsListRegistry);
       assertTrue(PlanningTestTools.isGoalNextToLastStep(goalPose, footstepPlan));
    }
 

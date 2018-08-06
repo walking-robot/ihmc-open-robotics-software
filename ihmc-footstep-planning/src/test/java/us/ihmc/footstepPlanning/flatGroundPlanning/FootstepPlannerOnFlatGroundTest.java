@@ -12,13 +12,18 @@ import us.ihmc.footstepPlanning.FootstepPlan;
 import us.ihmc.footstepPlanning.simplePlanners.FlatGroundPlanningUtils;
 import us.ihmc.footstepPlanning.testTools.PlanningTest;
 import us.ihmc.footstepPlanning.testTools.PlanningTestTools;
+import us.ihmc.graphicsDescription.yoGraphics.YoGraphicsListRegistry;
 import us.ihmc.robotics.robotSide.RobotSide;
+import us.ihmc.yoVariables.registry.YoVariableRegistry;
 
 public abstract class FootstepPlannerOnFlatGroundTest implements PlanningTest
 {
    protected static final ReferenceFrame worldFrame = ReferenceFrame.getWorldFrame();
    private static final double stepWidth = 0.3;
    private final Random random = new Random(727434726273L);
+
+   protected YoGraphicsListRegistry yoGraphicsListRegistry;
+   protected YoVariableRegistry registry;
 
    public void testJustStraightLine()
    {
@@ -28,7 +33,7 @@ public abstract class FootstepPlannerOnFlatGroundTest implements PlanningTest
    public void testJustStraightLine(boolean assertPlannerReturnedResult)
    {
       double xGoal = 5.0;
-      double yGoal = -stepWidth/2.0;
+      double yGoal = -stepWidth / 2.0;
       double yawGoal = 0.0;
       Point2D goalPosition = new Point2D(xGoal, yGoal);
       FramePose2D goalPose = new FramePose2D(ReferenceFrame.getWorldFrame(), goalPosition, yawGoal);
@@ -42,13 +47,14 @@ public abstract class FootstepPlannerOnFlatGroundTest implements PlanningTest
 
       FramePose3D initialStanceFootPose3d = FlatGroundPlanningUtils.poseFormPose2d(initialStanceFootPose);
       FramePose3D goalPose3d = FlatGroundPlanningUtils.poseFormPose2d(goalPose);
-      FootstepPlan footstepPlan =
-            PlanningTestTools.runPlanner(getPlanner(), initialStanceFootPose3d, initialStanceFootSide, goalPose3d, null, assertPlannerReturnedResult);
+      FootstepPlan footstepPlan = PlanningTestTools
+            .runPlanner(getPlanner(), initialStanceFootPose3d, initialStanceFootSide, goalPose3d, null, assertPlannerReturnedResult);
 
       if (visualize())
-         PlanningTestTools.visualizeAndSleep(null, footstepPlan, goalPose3d);
+         PlanningTestTools.visualizeAndSleep(null, footstepPlan, goalPose3d, null, registry, yoGraphicsListRegistry);
 
-      if (assertPlannerReturnedResult) assertTrue(PlanningTestTools.isGoalNextToLastStep(goalPose3d, footstepPlan));
+      if (assertPlannerReturnedResult)
+         assertTrue(PlanningTestTools.isGoalNextToLastStep(goalPose3d, footstepPlan));
    }
 
    public void testATightTurn()
@@ -73,14 +79,16 @@ public abstract class FootstepPlannerOnFlatGroundTest implements PlanningTest
 
       FramePose3D initialStanceFootPose3d = FlatGroundPlanningUtils.poseFormPose2d(initialStanceFootPose);
       FramePose3D goalPose3d = FlatGroundPlanningUtils.poseFormPose2d(goalPose);
-      FootstepPlan footstepPlan =
-            PlanningTestTools.runPlanner(getPlanner(), initialStanceFootPose3d, initialStanceFootSide, goalPose3d, null, assertPlannerReturnedResult);
+      FootstepPlan footstepPlan = PlanningTestTools
+            .runPlanner(getPlanner(), initialStanceFootPose3d, initialStanceFootSide, goalPose3d, null, assertPlannerReturnedResult);
 
-      if (assertPlannerReturnedResult) assertTrue(PlanningTestTools.isGoalNextToLastStep(goalPose3d, footstepPlan));
-      if (assertPlannerReturnedResult) assertTrue(footstepPlan.getNumberOfSteps() < 30);
+      if (assertPlannerReturnedResult)
+         assertTrue(PlanningTestTools.isGoalNextToLastStep(goalPose3d, footstepPlan));
+      if (assertPlannerReturnedResult)
+         assertTrue(footstepPlan.getNumberOfSteps() < 30);
 
       if (visualize())
-         PlanningTestTools.visualizeAndSleep(null, footstepPlan, goalPose3d);
+         PlanningTestTools.visualizeAndSleep(null, footstepPlan, goalPose3d, null, registry, yoGraphicsListRegistry);
    }
 
    public void testStraightLineWithInitialTurn()
@@ -91,7 +99,7 @@ public abstract class FootstepPlannerOnFlatGroundTest implements PlanningTest
    public void testStraightLineWithInitialTurn(boolean assertPlannerReturnedResult)
    {
       double xGoal = 5.0;
-      double yGoal = -stepWidth/2.0;
+      double yGoal = -stepWidth / 2.0;
       double yawGoal = Math.toRadians(20.0);
       Point2D goalPosition = new Point2D(xGoal, yGoal);
       FramePose2D goalPose = new FramePose2D(ReferenceFrame.getWorldFrame(), goalPosition, yawGoal);
@@ -105,12 +113,13 @@ public abstract class FootstepPlannerOnFlatGroundTest implements PlanningTest
 
       FramePose3D initialStanceFootPose3d = FlatGroundPlanningUtils.poseFormPose2d(initialStanceFootPose);
       FramePose3D goalPose3d = FlatGroundPlanningUtils.poseFormPose2d(goalPose);
-      FootstepPlan footstepPlan =
-            PlanningTestTools.runPlanner(getPlanner(), initialStanceFootPose3d, initialStanceFootSide, goalPose3d, null, assertPlannerReturnedResult);
+      FootstepPlan footstepPlan = PlanningTestTools
+            .runPlanner(getPlanner(), initialStanceFootPose3d, initialStanceFootSide, goalPose3d, null, assertPlannerReturnedResult);
 
       if (visualize())
-         PlanningTestTools.visualizeAndSleep(null, footstepPlan, goalPose3d);
-      if (assertPlannerReturnedResult) assertTrue(PlanningTestTools.isGoalNextToLastStep(goalPose3d, footstepPlan));
+         PlanningTestTools.visualizeAndSleep(null, footstepPlan, goalPose3d, null, registry, yoGraphicsListRegistry);
+      if (assertPlannerReturnedResult)
+         assertTrue(PlanningTestTools.isGoalNextToLastStep(goalPose3d, footstepPlan));
    }
 
    public void testJustTurnInPlace()
@@ -121,7 +130,7 @@ public abstract class FootstepPlannerOnFlatGroundTest implements PlanningTest
    public void testJustTurnInPlace(boolean assertPlannerReturnedResult)
    {
       double xGoal = 0.0;
-      double yGoal = -stepWidth/2.0;
+      double yGoal = -stepWidth / 2.0;
       double yawGoal = Math.toRadians(160.0);
       Point2D goalPosition = new Point2D(xGoal, yGoal);
       FramePose2D goalPose = new FramePose2D(ReferenceFrame.getWorldFrame(), goalPosition, yawGoal);
@@ -135,12 +144,13 @@ public abstract class FootstepPlannerOnFlatGroundTest implements PlanningTest
 
       FramePose3D initialStanceFootPose3d = FlatGroundPlanningUtils.poseFormPose2d(initialStanceFootPose);
       FramePose3D goalPose3d = FlatGroundPlanningUtils.poseFormPose2d(goalPose);
-      FootstepPlan footstepPlan =
-            PlanningTestTools.runPlanner(getPlanner(), initialStanceFootPose3d, initialStanceFootSide, goalPose3d, null, assertPlannerReturnedResult);
+      FootstepPlan footstepPlan = PlanningTestTools
+            .runPlanner(getPlanner(), initialStanceFootPose3d, initialStanceFootSide, goalPose3d, null, assertPlannerReturnedResult);
 
       if (visualize())
-         PlanningTestTools.visualizeAndSleep(null, footstepPlan, goalPose3d);
-      if (assertPlannerReturnedResult) assertTrue(PlanningTestTools.isGoalNextToLastStep(goalPose3d, footstepPlan));
+         PlanningTestTools.visualizeAndSleep(null, footstepPlan, goalPose3d, null, registry, yoGraphicsListRegistry);
+      if (assertPlannerReturnedResult)
+         assertTrue(PlanningTestTools.isGoalNextToLastStep(goalPose3d, footstepPlan));
    }
 
    public void testRandomPoses()
@@ -165,11 +175,12 @@ public abstract class FootstepPlannerOnFlatGroundTest implements PlanningTest
 
       FramePose3D initialStanceFootPose3d = FlatGroundPlanningUtils.poseFormPose2d(initialStanceFootPose);
       FramePose3D goalPose3d = FlatGroundPlanningUtils.poseFormPose2d(goalPose);
-      FootstepPlan footstepPlan =
-            PlanningTestTools.runPlanner(getPlanner(), initialStanceFootPose3d, initialStanceFootSide, goalPose3d, null, assertPlannerReturnedResult);
+      FootstepPlan footstepPlan = PlanningTestTools
+            .runPlanner(getPlanner(), initialStanceFootPose3d, initialStanceFootSide, goalPose3d, null, assertPlannerReturnedResult);
 
       if (visualize())
-         PlanningTestTools.visualizeAndSleep(null, footstepPlan, goalPose3d);
-      if (assertPlannerReturnedResult) assertTrue(PlanningTestTools.isGoalNextToLastStep(goalPose3d, footstepPlan));
+         PlanningTestTools.visualizeAndSleep(null, footstepPlan, goalPose3d, null, registry, yoGraphicsListRegistry);
+      if (assertPlannerReturnedResult)
+         assertTrue(PlanningTestTools.isGoalNextToLastStep(goalPose3d, footstepPlan));
    }
 }
