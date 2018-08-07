@@ -2,7 +2,6 @@ package us.ihmc.avatar.joystickBasedJavaFXController;
 
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
-import us.ihmc.commons.PrintTools;
 import us.ihmc.javaFXToolkit.messager.JavaFXMessager;
 
 public class GraspingPaneController
@@ -12,10 +11,10 @@ public class GraspingPaneController
 
    @FXML
    private GraspingObjectPaneController graspingObjectPaneController;
-   
+
    @FXML
    private GraspingToolboxPaneController graspingToolboxPaneController;
-   
+
    @FXML
    private GraspingFingerPaneController graspingFingerPaneController;
 
@@ -26,8 +25,6 @@ public class GraspingPaneController
 
    public void initialize(JavaFXMessager messager)
    {
-      PrintTools.info("works");
-      
       graspingObjectPaneController.initialize(messager);
       graspingToolboxPaneController.initialize(messager);
       graspingFingerPaneController.initialize(messager);

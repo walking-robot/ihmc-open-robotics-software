@@ -6,6 +6,10 @@ import java.util.List;
 import javax.vecmath.MismatchedSizeException;
 
 import controller_msgs.msg.dds.ReachingManifoldMessage;
+import controller_msgs.msg.dds.RigidBodyExplorationConfigurationMessage;
+import controller_msgs.msg.dds.WaypointBasedTrajectoryMessage;
+import controller_msgs.msg.dds.WholeBodyTrajectoryToolboxConfigurationMessage;
+import controller_msgs.msg.dds.WholeBodyTrajectoryToolboxMessage;
 import gnu.trove.list.array.TDoubleArrayList;
 import us.ihmc.euclid.axisAngle.AxisAngle;
 import us.ihmc.euclid.geometry.Cylinder3D;
@@ -27,12 +31,17 @@ import us.ihmc.graphicsDescription.SegmentedLine3DMeshDataGenerator;
 import us.ihmc.graphicsDescription.appearance.YoAppearance;
 import us.ihmc.humanoidRobotics.communication.packets.HumanoidMessageTools;
 import us.ihmc.humanoidRobotics.communication.packets.manipulation.wholeBodyTrajectory.ConfigurationSpaceName;
+import us.ihmc.humanoidRobotics.communication.packets.manipulation.wholeBodyTrajectory.WholeBodyTrajectoryToolboxMessageTools;
 import us.ihmc.humanoidRobotics.communication.packets.manipulation.wholeBodyTrajectory.WholeBodyTrajectoryToolboxMessageTools.FunctionTrajectory;
 import us.ihmc.humanoidRobotics.communication.wholeBodyTrajectoryToolboxAPI.ReachingManifoldCommand;
+import us.ihmc.manipulation.planning.exploringSpatial.TrajectoryLibraryForDRC;
 import us.ihmc.manipulation.planning.gradientDescent.GradientDescentModule;
 import us.ihmc.manipulation.planning.gradientDescent.SingleQueryFunction;
+import us.ihmc.robotModels.FullHumanoidRobotModel;
 import us.ihmc.robotics.robotSide.RobotSide;
+import us.ihmc.robotics.screwTheory.MovingReferenceFrame;
 import us.ihmc.robotics.screwTheory.RigidBody;
+import us.ihmc.robotics.screwTheory.SelectionMatrix6D;
 
 /**
  * Essential tools for manifolds.
@@ -43,6 +52,8 @@ import us.ihmc.robotics.screwTheory.RigidBody;
  */
 public class ReachingManifoldTools
 {
+   private static double extrapolateRatio = 1.5;
+
    public static Graphics3DObject createManifoldMessageStaticGraphic(ReachingManifoldMessage reachingManifoldMessage, double radius,
                                                                      int resolutionForSingleSpace)
    {
@@ -112,6 +123,68 @@ public class ReachingManifoldTools
       }
 
       return graphics;
+   }
+
+   public static WholeBodyTrajectoryToolboxMessage createReachingWholeBodyTrajectoryToolboxMessage(FullHumanoidRobotModel fullRobotModel, RigidBody hand,
+                                                                                                   RobotSide robotSide,
+                                                                                                   List<ReachingManifoldMessage> reachingManifoldMessages,
+                                                                                                   double desiredTrajectoryTime)
+   {
+      // input
+      double extrapolateRatio = ReachingManifoldTools.extrapolateRatio;
+      double trajectoryTimeBeforeExtrapolated = desiredTrajectoryTime;
+      double trajectoryTime = trajectoryTimeBeforeExtrapolated * extrapolateRatio;
+
+      // wbt toolbox configuration message
+      WholeBodyTrajectoryToolboxConfigurationMessage configuration = new WholeBodyTrajectoryToolboxConfigurationMessage();
+      configuration.getInitialConfiguration().set(HumanoidMessageTools.createKinematicsToolboxOutputStatus(fullRobotModel));
+      configuration.setMaximumExpansionSize(1000);
+
+      // trajectory message
+      List<WaypointBasedTrajectoryMessage> handTrajectories = new ArrayList<>();
+      List<RigidBodyExplorationConfigurationMessage> rigidBodyConfigurations = new ArrayList<>();
+      List<ReachingManifoldMessage> reachingManifolds = new ArrayList<>();
+
+      double timeResolution = trajectoryTime / 20.0;
+
+      MovingReferenceFrame handControlFrame = fullRobotModel.getHandControlFrame(robotSide);
+      RigidBodyTransform handTransform = handControlFrame.getTransformToWorldFrame();
+
+      RigidBodyTransform closestPointOnManifold = new RigidBodyTransform();
+      RigidBodyTransform endTransformOnTrajectory = new RigidBodyTransform();
+
+      List<ReachingManifoldCommand> manifolds = new ArrayList<>();
+      for (int i = 0; i < reachingManifoldMessages.size(); i++)
+      {
+         ReachingManifoldCommand manifold = new ReachingManifoldCommand();
+         manifold.setFromMessage(reachingManifoldMessages.get(i));
+         manifolds.add(manifold);
+      }
+      ReachingManifoldTools.packClosestRigidBodyTransformOnManifold(manifolds, handTransform, closestPointOnManifold, 1.0, 0.1);
+      ReachingManifoldTools.packExtrapolatedTransform(handTransform, closestPointOnManifold, extrapolateRatio, endTransformOnTrajectory);
+      reachingManifolds.addAll(reachingManifoldMessages);
+
+      FunctionTrajectory handFunction = time -> TrajectoryLibraryForDRC.computeLinearTrajectory(time, trajectoryTime, handTransform, endTransformOnTrajectory);
+
+      SelectionMatrix6D selectionMatrix = new SelectionMatrix6D();
+      selectionMatrix.resetSelection();
+      WaypointBasedTrajectoryMessage trajectory = WholeBodyTrajectoryToolboxMessageTools.createTrajectoryMessage(hand, 0.0, trajectoryTime, timeResolution,
+                                                                                                                 handFunction, selectionMatrix);
+
+      RigidBodyTransform handControlFrameTransformToBodyFixedFrame = new RigidBodyTransform();
+      handControlFrame.getTransformToDesiredFrame(handControlFrameTransformToBodyFixedFrame, hand.getBodyFixedFrame());
+      trajectory.getControlFramePositionInEndEffector().set(handControlFrameTransformToBodyFixedFrame.getTranslationVector());
+      trajectory.getControlFrameOrientationInEndEffector().set(handControlFrameTransformToBodyFixedFrame.getRotationMatrix());
+
+      handTrajectories.add(trajectory);
+
+      ConfigurationSpaceName[] spaces = {ConfigurationSpaceName.X, ConfigurationSpaceName.Y, ConfigurationSpaceName.Z, ConfigurationSpaceName.SE3};
+      rigidBodyConfigurations.add(HumanoidMessageTools.createRigidBodyExplorationConfigurationMessage(hand, spaces));
+
+      WholeBodyTrajectoryToolboxMessage message = HumanoidMessageTools.createWholeBodyTrajectoryToolboxMessage(configuration, handTrajectories,
+                                                                                                               reachingManifolds, rigidBodyConfigurations);
+
+      return message;
    }
 
    public static double packClosestRigidBodyTransformOnManifold(List<ReachingManifoldCommand> manifolds, Pose3D pose,

@@ -5,9 +5,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import controller_msgs.msg.dds.ReachingManifoldMessage;
-import controller_msgs.msg.dds.RigidBodyExplorationConfigurationMessage;
-import controller_msgs.msg.dds.WaypointBasedTrajectoryMessage;
-import controller_msgs.msg.dds.WholeBodyTrajectoryToolboxConfigurationMessage;
 import controller_msgs.msg.dds.WholeBodyTrajectoryToolboxMessage;
 import controller_msgs.msg.dds.WholeBodyTrajectoryToolboxOutputStatus;
 import javafx.animation.AnimationTimer;
@@ -31,29 +28,20 @@ import us.ihmc.euclid.geometry.Shape3D;
 import us.ihmc.euclid.geometry.Sphere3D;
 import us.ihmc.euclid.geometry.Torus3D;
 import us.ihmc.euclid.matrix.RotationMatrix;
-import us.ihmc.euclid.transform.RigidBodyTransform;
 import us.ihmc.euclid.tuple3D.Point3D;
 import us.ihmc.euclid.tuple4D.Quaternion;
 import us.ihmc.graphicsDescription.MeshDataBuilder;
 import us.ihmc.graphicsDescription.MeshDataGenerator;
 import us.ihmc.graphicsDescription.MeshDataHolder;
-import us.ihmc.humanoidRobotics.communication.packets.HumanoidMessageTools;
-import us.ihmc.humanoidRobotics.communication.packets.manipulation.wholeBodyTrajectory.ConfigurationSpaceName;
-import us.ihmc.humanoidRobotics.communication.packets.manipulation.wholeBodyTrajectory.WholeBodyTrajectoryToolboxMessageTools;
-import us.ihmc.humanoidRobotics.communication.packets.manipulation.wholeBodyTrajectory.WholeBodyTrajectoryToolboxMessageTools.FunctionTrajectory;
-import us.ihmc.humanoidRobotics.communication.wholeBodyTrajectoryToolboxAPI.ReachingManifoldCommand;
 import us.ihmc.javaFXToolkit.JavaFXTools;
 import us.ihmc.javaFXToolkit.graphics.JavaFXMeshDataInterpreter;
 import us.ihmc.javaFXToolkit.messager.JavaFXMessager;
 import us.ihmc.javaFXToolkit.shapes.JavaFXCoordinateSystem;
-import us.ihmc.manipulation.planning.exploringSpatial.TrajectoryLibraryForDRC;
 import us.ihmc.manipulation.planning.manifold.ReachingManifoldTools;
 import us.ihmc.robotModels.FullHumanoidRobotModel;
 import us.ihmc.robotModels.FullHumanoidRobotModelFactory;
 import us.ihmc.robotics.robotSide.RobotSide;
-import us.ihmc.robotics.screwTheory.MovingReferenceFrame;
 import us.ihmc.robotics.screwTheory.RigidBody;
-import us.ihmc.robotics.screwTheory.SelectionMatrix6D;
 import us.ihmc.ros2.Ros2Node;
 
 /**
@@ -67,6 +55,8 @@ import us.ihmc.ros2.Ros2Node;
 public class GraspingJavaFXController
 {
    // TODO : visualize the result came from WholeBodyTrajctoryToolbox.
+
+   private final FullHumanoidRobotModel fullRobotModel;
 
    private final AtomicReference<List<Node>> objectsToVisualizeReference = new AtomicReference<>(new ArrayList<>());
 
@@ -82,8 +72,7 @@ public class GraspingJavaFXController
 
    private final Group rootNode = new Group();
 
-   private final RigidBodyTransform defaultTransformToCreate = new RigidBodyTransform();
-   private final Point3D controlPosition = new Point3D();
+   private final Point3D controlPosition = new Point3D(0.5, 0.0, 1.0);
    private final RotationMatrix controlOrientation = new RotationMatrix();
 
    private final static double ratioJoyStickToPosition = 0.01;
@@ -117,12 +106,10 @@ public class GraspingJavaFXController
          return Sphere;
       }
    }
-   
-   private final FullHumanoidRobotModelFactory fullRobotModelFactory;
 
    public GraspingJavaFXController(String robotName, JavaFXMessager messager, Ros2Node ros2Node, FullHumanoidRobotModelFactory fullRobotModelFactory)
    {
-      this.fullRobotModelFactory = fullRobotModelFactory;
+      fullRobotModel = fullRobotModelFactory.createFullRobotModel();
       sphereRadius = messager.createInput(GraspingJavaFXTopics.SphereRadius, 0.1);
 
       cylinderRadius = messager.createInput(GraspingJavaFXTopics.CylinderRadius, 0.1);
@@ -130,9 +117,6 @@ public class GraspingJavaFXController
 
       torusRadius = messager.createInput(GraspingJavaFXTopics.TorusRadius, 0.1);
       torusTube = messager.createInput(GraspingJavaFXTopics.TorusTubeRadius, 0.1);
-
-      // temp adding Shape3D
-      defaultTransformToCreate.appendTranslation(1.0, 0.0, 0.0);
 
       // register xbox events
       messager.registerTopicListener(XBoxOneJavaFXController.ButtonSelectState, state -> clearObjects(state));
@@ -157,8 +141,8 @@ public class GraspingJavaFXController
       ROS2Tools.MessageTopicNameGenerator controllerPubGenerator = WholeBodyTrajectoryToolboxModule.getPublisherTopicNameGenerator(robotName);
       ROS2Tools.MessageTopicNameGenerator controllerSubGenerator = WholeBodyTrajectoryToolboxModule.getSubscriberTopicNameGenerator(robotName);
 
-      toolboxMessagePublisher = ROS2Tools.createPublisher(ros2Node, WholeBodyTrajectoryToolboxMessage.class, controllerPubGenerator);
-      ROS2Tools.createCallbackSubscription(ros2Node, WholeBodyTrajectoryToolboxOutputStatus.class, controllerSubGenerator,
+      toolboxMessagePublisher = ROS2Tools.createPublisher(ros2Node, WholeBodyTrajectoryToolboxMessage.class, controllerSubGenerator);
+      ROS2Tools.createCallbackSubscription(ros2Node, WholeBodyTrajectoryToolboxOutputStatus.class, controllerPubGenerator,
                                            s -> consumeToolboxOutputStatus(s.takeNextData()));
 
       animationTimer = new AnimationTimer()
@@ -183,79 +167,53 @@ public class GraspingJavaFXController
       {
          if (listOfShape3D.size() > 0)
          {
-            // TODO
-            
-            
-            RobotSide robotSide = RobotSide.RIGHT;
-            FullHumanoidRobotModel fullRobotModel = fullRobotModelFactory.createFullRobotModel();
+            // TODO : from xbox or fxml.
+            // TODO : fix another side? or not (Optional).
+            RobotSide robotSide = RobotSide.LEFT;
             RigidBody hand = fullRobotModel.getHand(robotSide);
-            List<ReachingManifoldMessage> reachingManifoldMessages = ReachingManifoldTools.createSphereManifoldMessagesForValkyrie(robotSide, hand, new Point3D(),
-                                                                                                                                   0.1);
 
-            // input
-            double extrapolateRatio = 1.5;
-            double trajectoryTimeBeforeExtrapolated = 5.0;
-            double trajectoryTime = trajectoryTimeBeforeExtrapolated * extrapolateRatio;
-
-            // wbt toolbox configuration message
-            WholeBodyTrajectoryToolboxConfigurationMessage configuration = new WholeBodyTrajectoryToolboxConfigurationMessage();
-            configuration.getInitialConfiguration().set(HumanoidMessageTools.createKinematicsToolboxOutputStatus(fullRobotModel));
-            configuration.setMaximumExpansionSize(1000);
-
-            // trajectory message
-            List<WaypointBasedTrajectoryMessage> handTrajectories = new ArrayList<>();
-            List<RigidBodyExplorationConfigurationMessage> rigidBodyConfigurations = new ArrayList<>();
-            List<ReachingManifoldMessage> reachingManifolds = new ArrayList<>();
-
-            double timeResolution = trajectoryTime / 100.0;
-
-            MovingReferenceFrame handControlFrame = fullRobotModel.getHandControlFrame(robotSide);
-            RigidBodyTransform handTransform = handControlFrame.getTransformToWorldFrame();
-
-            RigidBodyTransform closestPointOnManifold = new RigidBodyTransform();
-            RigidBodyTransform endTransformOnTrajectory = new RigidBodyTransform();
-
-            List<ReachingManifoldCommand> manifolds = new ArrayList<>();
-            for (int i = 0; i < reachingManifoldMessages.size(); i++)
+            List<ReachingManifoldMessage> reachingManifoldMessages = new ArrayList<>();
+            for (int i = 0; i < listOfShape3D.size(); i++)
             {
-               ReachingManifoldCommand manifold = new ReachingManifoldCommand();
-               manifold.setFromMessage(reachingManifoldMessages.get(i));
-               manifolds.add(manifold);
+               List<ReachingManifoldMessage> manifolds = null;
+               Shape3D<?> shape3d = listOfShape3D.get(i);
+               if (shape3d instanceof Sphere3D)
+               {
+                  System.out.println("" + shape3d.getPosition());
+                  System.out.println("" + ((Sphere3D) shape3d).getRadius());
+                  manifolds = ReachingManifoldTools.createSphereManifoldMessagesForValkyrie(robotSide, hand, shape3d.getPosition(),
+                                                                                            ((Sphere3D) shape3d).getRadius());
+               }
+               else if (shape3d instanceof Cylinder3D)
+               {
+                  manifolds = ReachingManifoldTools.createCylinderManifoldMessagesForValkyrie(robotSide, hand, shape3d.getPosition(), shape3d.getOrientation(),
+                                                                                              ((Cylinder3D) shape3d).getRadius(),
+                                                                                              ((Cylinder3D) shape3d).getHeight());
+               }
+               else if (shape3d instanceof Torus3D)
+               {
+                  manifolds = ReachingManifoldTools.createTorusManifoldMessagesForValkyrie(robotSide, hand, shape3d.getPosition(), shape3d.getOrientation(),
+                                                                                           ((Torus3D) shape3d).getRadius(),
+                                                                                           ((Torus3D) shape3d).getTubeRadius());
+               }
+
+               if (manifolds != null)
+                  reachingManifoldMessages.addAll(manifolds);
+               else
+               {
+                  System.out.println("there is no objects created");
+                  break;
+               }
             }
-            ReachingManifoldTools.packClosestRigidBodyTransformOnManifold(manifolds, handTransform, closestPointOnManifold, 1.0, 0.1);
-            ReachingManifoldTools.packExtrapolatedTransform(handTransform, closestPointOnManifold, extrapolateRatio, endTransformOnTrajectory);
-            reachingManifolds.addAll(reachingManifoldMessages);
 
-            FunctionTrajectory handFunction = time -> TrajectoryLibraryForDRC.computeLinearTrajectory(time, trajectoryTime, handTransform, endTransformOnTrajectory);
+            WholeBodyTrajectoryToolboxMessage message = ReachingManifoldTools.createReachingWholeBodyTrajectoryToolboxMessage(fullRobotModel, hand, robotSide,
+                                                                                                                              reachingManifoldMessages, 5.0);
 
-            SelectionMatrix6D selectionMatrix = new SelectionMatrix6D();
-            selectionMatrix.resetSelection();
-            WaypointBasedTrajectoryMessage trajectory = WholeBodyTrajectoryToolboxMessageTools.createTrajectoryMessage(hand, 0.0, trajectoryTime, timeResolution,
-                                                                                                                       handFunction, selectionMatrix);
-
-            RigidBodyTransform handControlFrameTransformToBodyFixedFrame = new RigidBodyTransform();
-            handControlFrame.getTransformToDesiredFrame(handControlFrameTransformToBodyFixedFrame, hand.getBodyFixedFrame());
-            trajectory.getControlFramePositionInEndEffector().set(handControlFrameTransformToBodyFixedFrame.getTranslationVector());
-            trajectory.getControlFrameOrientationInEndEffector().set(handControlFrameTransformToBodyFixedFrame.getRotationMatrix());
-
-            handTrajectories.add(trajectory);
-
-            ConfigurationSpaceName[] spaces = {ConfigurationSpaceName.X, ConfigurationSpaceName.Y, ConfigurationSpaceName.Z, ConfigurationSpaceName.SE3};
-            rigidBodyConfigurations.add(HumanoidMessageTools.createRigidBodyExplorationConfigurationMessage(hand, spaces));
-
-            WholeBodyTrajectoryToolboxMessage message = HumanoidMessageTools.createWholeBodyTrajectoryToolboxMessage(configuration, handTrajectories,
-                                                                                                                     reachingManifolds, rigidBodyConfigurations);
-            
-            
-            PrintTools.info("before publish");
             toolboxMessagePublisher.publish(message);
-            PrintTools.info("published");
          }
          else
-         {
             System.out.println("there is no objects created");
-         }
-         PrintTools.info("sendReachingManifoldsToToolbox");
+
       }
    }
 
@@ -347,17 +305,19 @@ public class GraspingJavaFXController
             {
             case Sphere:
                Sphere3D sphere = new Sphere3D(sphereRadius.get().doubleValue());
-               sphere.appendTranslation(defaultTransformToCreate.getTranslationVector());
+               sphere.setPosition(controlPosition);
                listOfShape3D.add(sphere);
                break;
             case Cylinder:
                Cylinder3D cylinder = new Cylinder3D(cylinderHeight.get().doubleValue(), cylinderRadius.get().doubleValue());
-               cylinder.setPose(defaultTransformToCreate);
+               cylinder.setPosition(controlPosition);
+               cylinder.setOrientation(controlOrientation);
                listOfShape3D.add(cylinder);
                break;
             case Torus:
                Torus3D torus = new Torus3D(torusRadius.get().doubleValue(), torusTube.get().doubleValue());
-               torus.setPose(defaultTransformToCreate);
+               torus.setPosition(controlPosition);
+               torus.setOrientation(controlOrientation);
                listOfShape3D.add(torus);
                break;
             case Box:
