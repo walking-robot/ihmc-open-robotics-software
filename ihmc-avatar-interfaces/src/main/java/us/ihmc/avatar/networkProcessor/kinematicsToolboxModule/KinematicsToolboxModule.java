@@ -110,7 +110,7 @@ public class KinematicsToolboxModule extends ToolboxModule
    }
 
    @Override
-   public MessageTopicNameGenerator getPublisherTopicNameGenerator()
+   public MessageTopicNameGenerator getOutputTopicNameGenerator()
    {
       return getPublisherTopicNameGenerator(robotName);
    }
@@ -121,7 +121,7 @@ public class KinematicsToolboxModule extends ToolboxModule
    }
 
    @Override
-   public MessageTopicNameGenerator getSubscriberTopicNameGenerator()
+   public MessageTopicNameGenerator getInputTopicNameGenerator()
    {
       return getSubscriberTopicNameGenerator(robotName);
    }

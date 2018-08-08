@@ -80,7 +80,7 @@ public class HeightQuadTreeToolboxModule extends ToolboxModule
    }
 
    @Override
-   public MessageTopicNameGenerator getPublisherTopicNameGenerator()
+   public MessageTopicNameGenerator getOutputTopicNameGenerator()
    {
       return getPublisherTopicNameGenerator(robotName);
    }
@@ -91,7 +91,7 @@ public class HeightQuadTreeToolboxModule extends ToolboxModule
    }
 
    @Override
-   public MessageTopicNameGenerator getSubscriberTopicNameGenerator()
+   public MessageTopicNameGenerator getInputTopicNameGenerator()
    {
       return getSubscriberTopicNameGenerator(robotName);
    }

@@ -42,7 +42,7 @@ public class FootstepPlanningToolboxModule extends ToolboxModule
    @Override
    public void registerExtraPuSubs(RealtimeRos2Node realtimeRos2Node)
    {
-      ROS2Tools.createCallbackSubscription(realtimeRos2Node, FootstepPlanningRequestPacket.class, getSubscriberTopicNameGenerator(),
+      ROS2Tools.createCallbackSubscription(realtimeRos2Node, FootstepPlanningRequestPacket.class, getInputTopicNameGenerator(),
                                            s -> footstepPlanningToolboxController.processRequest(s.takeNextData()));
       textToSpeechPublisher = ROS2Tools.createPublisher(realtimeRos2Node, TextToSpeechPacket.class, ROS2Tools::generateDefaultTopicName);
    }
@@ -69,7 +69,7 @@ public class FootstepPlanningToolboxModule extends ToolboxModule
    }
 
    @Override
-   public MessageTopicNameGenerator getPublisherTopicNameGenerator()
+   public MessageTopicNameGenerator getOutputTopicNameGenerator()
    {
       return getPublisherTopicNameGenerator(robotName);
    }
@@ -80,7 +80,7 @@ public class FootstepPlanningToolboxModule extends ToolboxModule
    }
 
    @Override
-   public MessageTopicNameGenerator getSubscriberTopicNameGenerator()
+   public MessageTopicNameGenerator getInputTopicNameGenerator()
    {
       return getSubscriberTopicNameGenerator(robotName);
    }

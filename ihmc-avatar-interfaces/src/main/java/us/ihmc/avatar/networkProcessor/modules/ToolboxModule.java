@@ -99,7 +99,7 @@ public abstract class ToolboxModule
       realtimeRos2Node = ROS2Tools.createRealtimeRos2Node(pubSubImplementation, "ihmc_" + CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, name));
       commandInputManager = new CommandInputManager(name, createListOfSupportedCommands());
       statusOutputManager = new StatusMessageOutputManager(createListOfSupportedStatus());
-      controllerNetworkSubscriber = new ControllerNetworkSubscriber(getSubscriberTopicNameGenerator(), commandInputManager, getPublisherTopicNameGenerator(),
+      controllerNetworkSubscriber = new ControllerNetworkSubscriber(getInputTopicNameGenerator(), commandInputManager, getOutputTopicNameGenerator(),
                                                                     statusOutputManager, realtimeRos2Node);
 
       executorService = Executors.newScheduledThreadPool(1, threadFactory);
@@ -119,7 +119,7 @@ public abstract class ToolboxModule
 
       controllerNetworkSubscriber.addMessageFilter(createMessageFilter());
 
-      ROS2Tools.createCallbackSubscription(realtimeRos2Node, ToolboxStateMessage.class, getSubscriberTopicNameGenerator(), s -> receivedPacket(s.takeNextData()));
+      ROS2Tools.createCallbackSubscription(realtimeRos2Node, ToolboxStateMessage.class, getInputTopicNameGenerator(), s -> receivedPacket(s.takeNextData()));
       registerExtraPuSubs(realtimeRos2Node);
       realtimeRos2Node.spin();
    }
@@ -380,7 +380,7 @@ public abstract class ToolboxModule
       return Collections.emptySet();
    }
 
-   public abstract ROS2Tools.MessageTopicNameGenerator getPublisherTopicNameGenerator();
+   public abstract ROS2Tools.MessageTopicNameGenerator getOutputTopicNameGenerator();
 
-   public abstract ROS2Tools.MessageTopicNameGenerator getSubscriberTopicNameGenerator();
+   public abstract ROS2Tools.MessageTopicNameGenerator getInputTopicNameGenerator();
 }
