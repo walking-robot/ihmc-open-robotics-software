@@ -138,11 +138,11 @@ public class GraspingJavaFXController
       messager.registerTopicListener(XBoxOneJavaFXController.ButtonYState, state -> confirmReachingMotion(state));
 
       // Ros messager
-      ROS2Tools.MessageTopicNameGenerator controllerPubGenerator = WholeBodyTrajectoryToolboxModule.getPublisherTopicNameGenerator(robotName);
-      ROS2Tools.MessageTopicNameGenerator controllerSubGenerator = WholeBodyTrajectoryToolboxModule.getSubscriberTopicNameGenerator(robotName);
+      ROS2Tools.MessageTopicNameGenerator toolboxResponseTopicNameGenerator = WholeBodyTrajectoryToolboxModule.getOutputTopicNameGenerator(robotName);
+      ROS2Tools.MessageTopicNameGenerator toolboxRequestTopicNameGenerator = WholeBodyTrajectoryToolboxModule.getInputTopicNameGenerator(robotName);
 
-      toolboxMessagePublisher = ROS2Tools.createPublisher(ros2Node, WholeBodyTrajectoryToolboxMessage.class, controllerSubGenerator);
-      ROS2Tools.createCallbackSubscription(ros2Node, WholeBodyTrajectoryToolboxOutputStatus.class, controllerPubGenerator,
+      toolboxMessagePublisher = ROS2Tools.createPublisher(ros2Node, WholeBodyTrajectoryToolboxMessage.class, toolboxRequestTopicNameGenerator);
+      ROS2Tools.createCallbackSubscription(ros2Node, WholeBodyTrajectoryToolboxOutputStatus.class, toolboxResponseTopicNameGenerator,
                                            s -> consumeToolboxOutputStatus(s.takeNextData()));
 
       animationTimer = new AnimationTimer()
