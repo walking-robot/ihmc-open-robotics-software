@@ -101,6 +101,7 @@ public class VisibilityGraphAStarRoughTerrainPlannerTest extends FootstepPlanner
       registry = new YoVariableRegistry("TestRegistry");
       yoGraphicsListRegistry = new YoGraphicsListRegistry();
       planner = VisibilityGraphWithAStarPlanner.createRoughTerrainPlanner(getParameters(), footPolygons, visualization, yoGraphicsListRegistry, registry);
+      planner.setPlanningHorizon(10.0);
    }
 
    @After

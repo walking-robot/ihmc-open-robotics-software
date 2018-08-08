@@ -69,6 +69,7 @@ public class VisibilityGraphAStarFlatPlannerTest extends FootstepPlannerOnFlatGr
       registry = new YoVariableRegistry("TestRegistry");
       yoGraphicsListRegistry = new YoGraphicsListRegistry();
       planner = VisibilityGraphWithAStarPlanner.createFlatGroundPlanner(getParameters(), visualization, yoGraphicsListRegistry, registry);
+      planner.setPlanningHorizon(10.0);
    }
 
    @After
