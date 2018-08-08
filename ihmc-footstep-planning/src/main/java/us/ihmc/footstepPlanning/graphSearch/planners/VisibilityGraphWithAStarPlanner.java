@@ -28,6 +28,7 @@ import us.ihmc.footstepPlanning.graphSearch.nodeExpansion.FootstepNodeExpansion;
 import us.ihmc.footstepPlanning.graphSearch.nodeExpansion.ParameterBasedNodeExpansion;
 import us.ihmc.footstepPlanning.graphSearch.stepCost.DistanceAndYawBasedCost;
 import us.ihmc.footstepPlanning.graphSearch.stepCost.FootstepCost;
+import us.ihmc.footstepPlanning.graphSearch.stepCost.FootstepCostBuilder;
 import us.ihmc.graphicsDescription.appearance.YoAppearance;
 import us.ihmc.graphicsDescription.yoGraphics.YoGraphicPosition;
 import us.ihmc.graphicsDescription.yoGraphics.YoGraphicsListRegistry;
@@ -54,7 +55,7 @@ public class VisibilityGraphWithAStarPlanner implements FootstepPlanner
 {
    private static final boolean DEBUG = true;
    private static final double defaultHeuristicWeight = 2.0;
-   private static final double planningHorizon = 1.0;
+   private static final double defaultPlanningHorizon = 1.0;
    private static final double defaultTimeout = 5.0;
 
    private final YoVariableRegistry registry = new YoVariableRegistry(getClass().getSimpleName());
@@ -64,6 +65,8 @@ public class VisibilityGraphWithAStarPlanner implements FootstepPlanner
    private final YoDouble timeSpentInFootstepPlanner = new YoDouble("timeSpentInFootstepPlanner", registry);
    private final YoEnum<FootstepPlanningResult> yoResult = new YoEnum<>("planningResult", registry, FootstepPlanningResult.class);
    private final NavigableRegionsManager navigableRegionsManager;
+
+   private final YoDouble planningHorizon = new YoDouble("planningHorizon", registry);
 
    private final FootstepPlannerParameters parameters;
    private final WaypointDefinedBodyPathPlan bodyPath;
@@ -76,7 +79,7 @@ public class VisibilityGraphWithAStarPlanner implements FootstepPlanner
    private final List<Point2D> waypoints = new ArrayList<>();
 
    private final boolean visualizing;
-   private static final int bodyPathPointsForVisualization = 100;
+   private static final int bodyPathPointsForVisualization = 500;
    private final List<YoFramePoint3D> bodyPathPoints = new ArrayList<>();
    private YoFramePoint3D goalPosition;
 
@@ -98,6 +101,8 @@ public class VisibilityGraphWithAStarPlanner implements FootstepPlanner
       bodyPath = new WaypointDefinedBodyPathPlan();
       heuristics = new BodyPathHeuristics(registry, parameters, bodyPath);
 
+      planningHorizon.set(defaultPlanningHorizon);
+
       heuristics.setWeight(defaultHeuristicWeight);
       footstepPlanner = new AStarFootstepPlanner(parameters, nodeChecker, heuristics, nodeExpansion, stepCostCalculator, snapper, viz, registry);
 
@@ -109,6 +114,16 @@ public class VisibilityGraphWithAStarPlanner implements FootstepPlanner
       {
          setupVisualization(graphicsListRegistry, registry);
       }
+   }
+
+   public void setHeuristicWeight(double heuristicWeight)
+   {
+      heuristics.setWeight(heuristicWeight);
+   }
+
+   public void setPlanningHorizon(double planningHorizon)
+   {
+      this.planningHorizon.set(planningHorizon);
    }
 
    private void setupVisualization(YoGraphicsListRegistry graphicsListRegistry, YoVariableRegistry registry)
@@ -207,7 +222,7 @@ public class VisibilityGraphWithAStarPlanner implements FootstepPlanner
                {
                   Vector2D goalDirection = new Vector2D(bodyGoalPose.getPosition());
                   goalDirection.sub(bodyStartPose.getX(), bodyStartPose.getY());
-                  goalDirection.scale(planningHorizon / goalDirection.length());
+                  goalDirection.scale(planningHorizon.getDoubleValue() / goalDirection.length());
                   waypoints.add(new Point2D(goalDirection.getX() + bodyStartPose.getX(), goalDirection.getY() + bodyStartPose.getY()));
                }
                else
@@ -243,7 +258,7 @@ public class VisibilityGraphWithAStarPlanner implements FootstepPlanner
 
       Pose2D goalPose2d = new Pose2D();
       double pathLength = bodyPath.computePathLength(0.0);
-            double alpha = MathTools.clamp(planningHorizon / pathLength, 0.0, 1.0);
+            double alpha = MathTools.clamp(planningHorizon.getValue() / pathLength, 0.0, 1.0);
 //      double alpha = 1.0;
       bodyPath.getPointAlongPath(alpha, goalPose2d);
       heuristics.setGoalAlpha(alpha);
@@ -354,7 +369,7 @@ public class VisibilityGraphWithAStarPlanner implements FootstepPlanner
    {
       Pose2D goalPose2d = new Pose2D();
       double pathLength = bodyPath.computePathLength(0.0);
-      double alpha = MathTools.clamp(planningHorizon / pathLength, 0.0, 1.0);
+      double alpha = MathTools.clamp(planningHorizon.getDoubleValue() / pathLength, 0.0, 1.0);
       bodyPath.getPointAlongPath(alpha, goalPose2d);
       return goalPose2d;
    }
@@ -379,7 +394,11 @@ public class VisibilityGraphWithAStarPlanner implements FootstepPlanner
       FootstepNodeExpansion expansion = new ParameterBasedNodeExpansion(parameters);
       DistanceAndYawBasedCost stepCostCalculator = new DistanceAndYawBasedCost(parameters);
 
-      return new VisibilityGraphWithAStarPlanner(parameters, nodeChecker, expansion, stepCostCalculator, snapper, viz, graphicsListRegistry, registry);
+      VisibilityGraphWithAStarPlanner planner = new VisibilityGraphWithAStarPlanner(parameters, nodeChecker, expansion, stepCostCalculator, snapper, viz, graphicsListRegistry, registry);
+      planner.setHeuristicWeight(2.0);
+
+
+      return planner;
    }
 
    public static VisibilityGraphWithAStarPlanner createRoughTerrainPlanner(FootstepPlannerParameters parameters,
@@ -389,12 +408,26 @@ public class VisibilityGraphWithAStarPlanner implements FootstepPlanner
       FootstepNodeSnapper snapper = new SimplePlanarRegionFootstepNodeSnapper(footPolygons);
       FootstepNodeChecker nodeChecker = new SnapBasedNodeChecker(parameters, footPolygons, snapper);
 
-      FootstepCost stepCostCalculator = new DistanceAndYawBasedCost(parameters);
+//      FootstepCost footstepCost = new DistanceAndYawBasedCost(parameters);
+      FootstepCostBuilder costBuilder = new FootstepCostBuilder();
+      costBuilder.setFootstepPlannerParameters(parameters);
+      costBuilder.setUseQuadraticStepCost(true);
+      costBuilder.setIncludeHeightCost(true);
+      costBuilder.setIncludeHeightCost(true);
+      costBuilder.setUsePitchAndRollCost(true);
+
+      FootstepCost footstepCost = costBuilder.buildCost();
+
+
+
       FootstepNodeExpansion expansion = new ParameterBasedNodeExpansion(parameters);
       FootstepNodeSnapper postProcessingSnapper = new FootstepNodeSnapAndWiggler(footPolygons, parameters, null);
 
-      return new VisibilityGraphWithAStarPlanner(parameters, nodeChecker, expansion, stepCostCalculator, postProcessingSnapper, viz, graphicsListRegistry,
+      VisibilityGraphWithAStarPlanner planner = new VisibilityGraphWithAStarPlanner(parameters, nodeChecker, expansion, footstepCost, postProcessingSnapper, viz, graphicsListRegistry,
                                                  registry);
+      planner.setHeuristicWeight(2.0);
+
+      return planner;
    }
 
 }
