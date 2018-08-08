@@ -138,7 +138,7 @@ public class ReachingManifoldCommand
    @Override
    public boolean isCommandValid()
    {
-      return false;
+      return true;
    }
 
    public RigidBody getRigidBody()
