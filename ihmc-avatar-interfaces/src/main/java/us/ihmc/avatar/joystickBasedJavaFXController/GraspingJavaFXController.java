@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
+import controller_msgs.msg.dds.ChestTrajectoryMessage;
 import controller_msgs.msg.dds.ReachingManifoldMessage;
+import controller_msgs.msg.dds.ToolboxStateMessage;
+import controller_msgs.msg.dds.WholeBodyTrajectoryMessage;
 import controller_msgs.msg.dds.WholeBodyTrajectoryToolboxMessage;
 import controller_msgs.msg.dds.WholeBodyTrajectoryToolboxOutputStatus;
 import javafx.animation.AnimationTimer;
@@ -19,20 +22,27 @@ import javafx.scene.shape.Mesh;
 import javafx.scene.shape.MeshView;
 import javafx.scene.transform.Affine;
 import us.ihmc.avatar.networkProcessor.wholeBodyTrajectoryToolboxModule.WholeBodyTrajectoryToolboxModule;
+import us.ihmc.commonWalkingControlModules.highLevelHumanoidControl.factories.ControllerAPIDefinition;
 import us.ihmc.commons.PrintTools;
 import us.ihmc.communication.IHMCROS2Publisher;
 import us.ihmc.communication.ROS2Tools;
+import us.ihmc.communication.ROS2Tools.MessageTopicNameGenerator;
+import us.ihmc.communication.packets.MessageTools;
+import us.ihmc.communication.packets.ToolboxState;
 import us.ihmc.euclid.geometry.Box3D;
 import us.ihmc.euclid.geometry.Cylinder3D;
 import us.ihmc.euclid.geometry.Shape3D;
 import us.ihmc.euclid.geometry.Sphere3D;
 import us.ihmc.euclid.geometry.Torus3D;
 import us.ihmc.euclid.matrix.RotationMatrix;
+import us.ihmc.euclid.referenceFrame.ReferenceFrame;
 import us.ihmc.euclid.tuple3D.Point3D;
 import us.ihmc.euclid.tuple4D.Quaternion;
 import us.ihmc.graphicsDescription.MeshDataBuilder;
 import us.ihmc.graphicsDescription.MeshDataGenerator;
 import us.ihmc.graphicsDescription.MeshDataHolder;
+import us.ihmc.humanoidRobotics.communication.packets.HumanoidMessageTools;
+import us.ihmc.humanoidRobotics.frames.HumanoidReferenceFrames;
 import us.ihmc.javaFXToolkit.JavaFXTools;
 import us.ihmc.javaFXToolkit.graphics.JavaFXMeshDataInterpreter;
 import us.ihmc.javaFXToolkit.messager.JavaFXMessager;
@@ -91,6 +101,8 @@ public class GraspingJavaFXController
    private int indexOfSelectedObject = 0;
    private final List<Shape3D<?>> listOfShape3D = new ArrayList<>();
 
+   private final IHMCROS2Publisher<WholeBodyTrajectoryMessage> wholeBodyTrajectoryPublisher;
+   private final IHMCROS2Publisher<ToolboxStateMessage> toolboxStatePublisher;
    private final IHMCROS2Publisher<WholeBodyTrajectoryToolboxMessage> toolboxMessagePublisher;
    private final WholeBodyTrajectoryToolboxOutputStatus toolboxOutputPacket = null;
 
@@ -138,10 +150,14 @@ public class GraspingJavaFXController
       messager.registerTopicListener(XBoxOneJavaFXController.ButtonYState, state -> confirmReachingMotion(state));
 
       // Ros messager
-      ROS2Tools.MessageTopicNameGenerator toolboxResponseTopicNameGenerator = WholeBodyTrajectoryToolboxModule.getOutputTopicNameGenerator(robotName);
       ROS2Tools.MessageTopicNameGenerator toolboxRequestTopicNameGenerator = WholeBodyTrajectoryToolboxModule.getInputTopicNameGenerator(robotName);
-
+      ROS2Tools.MessageTopicNameGenerator toolboxResponseTopicNameGenerator = WholeBodyTrajectoryToolboxModule.getOutputTopicNameGenerator(robotName);
+      MessageTopicNameGenerator subscriberTopicNameGenerator = ControllerAPIDefinition.getSubscriberTopicNameGenerator(robotName);
+      
+      wholeBodyTrajectoryPublisher = ROS2Tools.createPublisher(ros2Node, WholeBodyTrajectoryMessage.class, subscriberTopicNameGenerator);
+      toolboxStatePublisher = ROS2Tools.createPublisher(ros2Node, ToolboxStateMessage.class, toolboxRequestTopicNameGenerator);
       toolboxMessagePublisher = ROS2Tools.createPublisher(ros2Node, WholeBodyTrajectoryToolboxMessage.class, toolboxRequestTopicNameGenerator);
+      
       ROS2Tools.createCallbackSubscription(ros2Node, WholeBodyTrajectoryToolboxOutputStatus.class, toolboxResponseTopicNameGenerator,
                                            s -> consumeToolboxOutputStatus(s.takeNextData()));
 
@@ -167,6 +183,8 @@ public class GraspingJavaFXController
       {
          if (listOfShape3D.size() > 0)
          {
+            toolboxStatePublisher.publish(MessageTools.createToolboxStateMessage(ToolboxState.WAKE_UP));
+            
             // TODO : from xbox or fxml.
             // TODO : fix another side? or not (Optional).
             RobotSide robotSide = RobotSide.LEFT;
@@ -179,8 +197,6 @@ public class GraspingJavaFXController
                Shape3D<?> shape3d = listOfShape3D.get(i);
                if (shape3d instanceof Sphere3D)
                {
-                  System.out.println("" + shape3d.getPosition());
-                  System.out.println("" + ((Sphere3D) shape3d).getRadius());
                   manifolds = ReachingManifoldTools.createSphereManifoldMessagesForValkyrie(robotSide, hand, shape3d.getPosition(),
                                                                                             ((Sphere3D) shape3d).getRadius());
                }
@@ -206,10 +222,11 @@ public class GraspingJavaFXController
                }
             }
 
-            WholeBodyTrajectoryToolboxMessage message = ReachingManifoldTools.createReachingWholeBodyTrajectoryToolboxMessage(fullRobotModel, hand, robotSide,
+            System.out.println("number of manifolds " + reachingManifoldMessages.size());
+            WholeBodyTrajectoryToolboxMessage wbtmessage = ReachingManifoldTools.createReachingWholeBodyTrajectoryToolboxMessage(fullRobotModel, hand, robotSide,
                                                                                                                               reachingManifoldMessages, 5.0);
 
-            toolboxMessagePublisher.publish(message);
+            toolboxMessagePublisher.publish(wbtmessage);
          }
          else
             System.out.println("there is no objects created");
@@ -221,8 +238,28 @@ public class GraspingJavaFXController
    {
       if (state == ButtonState.PRESSED)
       {
-         // TODO
+         // TODO : from output status.
          PrintTools.info("confirmReachingMotion");
+
+         HumanoidReferenceFrames humanoidReferenceFrames = new HumanoidReferenceFrames(fullRobotModel);
+         ReferenceFrame worldFrame = ReferenceFrame.getWorldFrame();
+         ReferenceFrame pelvisZUpFrame = humanoidReferenceFrames.getPelvisZUpFrame();
+         
+         WholeBodyTrajectoryMessage wholeBodyTrajectoryMessage = new WholeBodyTrajectoryMessage();
+
+         Point3D desiredPosition = new Point3D(0.6, 0.3, 1.1);
+         Quaternion desiredOrientation = new Quaternion();
+         desiredOrientation.appendPitchRotation(Math.PI * 0.25);
+         
+         wholeBodyTrajectoryMessage.getLeftHandTrajectoryMessage()
+                                   .set(HumanoidMessageTools.createHandTrajectoryMessage(RobotSide.LEFT, 2.0, desiredPosition, desiredOrientation,
+                                                                                         worldFrame));
+         
+         ChestTrajectoryMessage chestTrajectoryMessage = HumanoidMessageTools.createChestTrajectoryMessage(2.0, desiredOrientation, pelvisZUpFrame);
+         chestTrajectoryMessage.getSo3Trajectory().getFrameInformation().setDataReferenceFrameId(MessageTools.toFrameId(ReferenceFrame.getWorldFrame()));
+         wholeBodyTrajectoryMessage.getChestTrajectoryMessage().set(chestTrajectoryMessage);
+         
+         wholeBodyTrajectoryPublisher.publish(wholeBodyTrajectoryMessage);
       }
    }
 
