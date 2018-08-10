@@ -64,7 +64,7 @@ public class DRCNetworkModuleParameters
       return useBehaviorVisualizer;
    }
    
-   public boolean isConstrainedWholeBodyPlanningToolboxEnabled()
+   public boolean isWholeBodyTrajectoryToolboxEnabled()
    {
       return useWholeBodyTrajectoryToolbox;
    }
@@ -84,7 +84,7 @@ public class DRCNetworkModuleParameters
       return useKinematicsToolboxVisualizer;
    }
    
-   public boolean isConstrainedWholeBodyToolboxVisualizerEnabled()
+   public boolean isWholeBodyTrajectoryToolboxVisualizerEnabled()
    {
       return useWholeBodyTrajectoryToolboxVisualizer;
    }

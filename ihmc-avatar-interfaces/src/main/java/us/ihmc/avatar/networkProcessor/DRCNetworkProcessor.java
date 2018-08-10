@@ -58,10 +58,10 @@ public class DRCNetworkProcessor
 
    private void setupWholebodyTrajectoryToolboxModule(DRCRobotModel robotModel, DRCNetworkModuleParameters params) throws IOException
    {
-      if (!params.isConstrainedWholeBodyPlanningToolboxEnabled())
+      if (!params.isWholeBodyTrajectoryToolboxEnabled())
          return;
 
-      new WholeBodyTrajectoryToolboxModule(robotModel, params.isConstrainedWholeBodyToolboxVisualizerEnabled());
+      new WholeBodyTrajectoryToolboxModule(robotModel, params.isWholeBodyTrajectoryToolboxVisualizerEnabled());
    }
 
    private void setupKinematicsToolboxModule(DRCRobotModel robotModel, DRCNetworkModuleParameters params) throws IOException
