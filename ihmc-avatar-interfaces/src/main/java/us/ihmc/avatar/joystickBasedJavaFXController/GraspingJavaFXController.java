@@ -82,7 +82,7 @@ public class GraspingJavaFXController
 
    private final Group rootNode = new Group();
 
-   private final Point3D controlPosition = new Point3D(0.5, 0.0, 1.0);
+   private final Point3D controlPosition = new Point3D(0.6, 0.3, 1.0);
    private final RotationMatrix controlOrientation = new RotationMatrix();
 
    private final static double ratioJoyStickToPosition = 0.01;
@@ -119,9 +119,9 @@ public class GraspingJavaFXController
       }
    }
 
-   public GraspingJavaFXController(String robotName, JavaFXMessager messager, Ros2Node ros2Node, FullHumanoidRobotModelFactory fullRobotModelFactory)
+   public GraspingJavaFXController(String robotName, JavaFXMessager messager, Ros2Node ros2Node, FullHumanoidRobotModelFactory fullRobotModelFactory, JavaFXRobotVisualizer javaFXRobotVisualizer)
    {
-      fullRobotModel = fullRobotModelFactory.createFullRobotModel();
+      fullRobotModel = javaFXRobotVisualizer.getFullRobotModel();
       sphereRadius = messager.createInput(GraspingJavaFXTopics.SphereRadius, 0.1);
 
       cylinderRadius = messager.createInput(GraspingJavaFXTopics.CylinderRadius, 0.1);
@@ -183,8 +183,9 @@ public class GraspingJavaFXController
       {
          if (listOfShape3D.size() > 0)
          {
-            toolboxStatePublisher.publish(MessageTools.createToolboxStateMessage(ToolboxState.WAKE_UP));
             
+            toolboxStatePublisher.publish(MessageTools.createToolboxStateMessage(ToolboxState.WAKE_UP));
+                        
             // TODO : from xbox or fxml.
             // TODO : fix another side? or not (Optional).
             RobotSide robotSide = RobotSide.LEFT;
@@ -223,6 +224,7 @@ public class GraspingJavaFXController
             }
 
             System.out.println("number of manifolds " + reachingManifoldMessages.size());
+            System.out.println(fullRobotModel.getPelvis().getBodyFixedFrame().getTransformToWorldFrame());
             WholeBodyTrajectoryToolboxMessage wbtmessage = ReachingManifoldTools.createReachingWholeBodyTrajectoryToolboxMessage(fullRobotModel, hand, robotSide,
                                                                                                                               reachingManifoldMessages, 5.0);
 
