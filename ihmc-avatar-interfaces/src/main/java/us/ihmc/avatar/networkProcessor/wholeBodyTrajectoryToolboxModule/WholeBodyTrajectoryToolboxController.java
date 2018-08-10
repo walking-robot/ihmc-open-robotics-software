@@ -13,6 +13,7 @@ import us.ihmc.avatar.drcRobot.DRCRobotModel;
 import us.ihmc.avatar.networkProcessor.kinematicsToolboxModule.HumanoidKinematicsSolver;
 import us.ihmc.avatar.networkProcessor.modules.ToolboxController;
 import us.ihmc.commons.Conversions;
+import us.ihmc.commons.PrintTools;
 import us.ihmc.communication.controllerAPI.CommandInputManager;
 import us.ihmc.communication.controllerAPI.StatusMessageOutputManager;
 import us.ihmc.communication.packets.MessageTools;
@@ -105,6 +106,7 @@ public class WholeBodyTrajectoryToolboxController extends ToolboxController
                                                YoGraphicsListRegistry yoGraphicsListRegistry, boolean visualize)
    {
       super(statusOutputManager, registry);
+      PrintTools.info("visualize " + visualize);
       this.commandInputManager = commandInputManager;
 
       visualizedFullRobotModel = fullRobotModel;
@@ -202,16 +204,20 @@ public class WholeBodyTrajectoryToolboxController extends ToolboxController
 
       boolean success = updateConfiguration();
       if (!success)
-      {
          return false;
-      }
+
+      if (!commandInputManager.isNewCommandAvailable(WaypointBasedTrajectoryCommand.class))
+         return false;
 
       if (!commandInputManager.isNewCommandAvailable(RigidBodyExplorationConfigurationCommand.class))
-      {
          return false;
-      }
 
+      if (!commandInputManager.isNewCommandAvailable(ReachingManifoldCommand.class))
+         return false;
+
+      trajectoryCommands = commandInputManager.pollNewCommands(WaypointBasedTrajectoryCommand.class);
       rigidBodyCommands = commandInputManager.pollNewCommands(RigidBodyExplorationConfigurationCommand.class);
+      manifoldCommands = commandInputManager.pollNewCommands(ReachingManifoldCommand.class);
 
       // ******************************************************************************** //
       // Convert command into WholeBodyTrajectoryToolboxData.
@@ -245,33 +251,6 @@ public class WholeBodyTrajectoryToolboxController extends ToolboxController
       if (commandInputManager.isNewCommandAvailable(WholeBodyTrajectoryToolboxConfigurationCommand.class))
       {
          WholeBodyTrajectoryToolboxConfigurationCommand command = commandInputManager.pollNewestCommand(WholeBodyTrajectoryToolboxConfigurationCommand.class);
-
-         trajectoryCommands = null;
-         manifoldCommands = null;
-         if (commandInputManager.isNewCommandAvailable(WaypointBasedTrajectoryCommand.class))
-         {
-            trajectoryCommands = commandInputManager.pollNewCommands(WaypointBasedTrajectoryCommand.class);
-            if (trajectoryCommands.size() < 1)
-               return false;
-            if (commandInputManager.isNewCommandAvailable(ReachingManifoldCommand.class))
-            {
-               manifoldCommands = commandInputManager.pollNewCommands(ReachingManifoldCommand.class);
-               if (manifoldCommands.size() < 1)
-                  return false;
-            }
-         }
-         else if (commandInputManager.isNewCommandAvailable(ReachingManifoldCommand.class))
-         {
-            manifoldCommands = commandInputManager.pollNewCommands(ReachingManifoldCommand.class);
-            if (manifoldCommands.size() < 1)
-               return false;
-         }
-         else
-         {
-            if (VERBOSE)
-               System.out.println("wrong type received");
-            return false;
-         }
 
          newMaxExpansionSize = command.getMaximumExpansionSize();
          newNumberOfInitialGuesses = command.getNumberOfInitialGuesses();
@@ -568,6 +547,10 @@ public class WholeBodyTrajectoryToolboxController extends ToolboxController
       @Override
       public void onEntry()
       {
+         if (VERBOSE)
+            System.out.println("onEntry " + getClass().getSimpleName()+" "+validNodes.size());
+         
+         lastStepProgress = 0.0;
          numberOfUpdate = 0;
          startTime = System.nanoTime();
       }
@@ -593,8 +576,8 @@ public class WholeBodyTrajectoryToolboxController extends ToolboxController
       {
          long endTime = System.nanoTime();
          double computationTime = Conversions.nanosecondsToSeconds(endTime - startTime);
-         if (VERBOSE)
-            System.out.println(getClass().getSimpleName() + " computationTime " + computationTime + " " + validNodes.size() + " " + numberOfUpdate);
+         //         if (VERBOSE)
+         //            System.out.println("onEntry " + getClass().getSimpleName() + " computationTime " + computationTime + " " + validNodes.size() + " " + numberOfUpdate);
 
          if (hasFail())
             setFailureOnOutputStatus(toolboxSolution, stateMachine.getCurrentStateKey());
