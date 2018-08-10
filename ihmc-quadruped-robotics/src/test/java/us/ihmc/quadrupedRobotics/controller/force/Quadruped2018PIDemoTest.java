@@ -187,7 +187,7 @@ public abstract class Quadruped2018PIDemoTest implements QuadrupedMultiRobotTest
 
       stepTeleopManager.getXGaitSettings().setStanceWidth(0.25);
       stepTeleopManager.getXGaitSettings().setStanceLength(0.7);
-      stepTeleopManager.setDesiredBodyHeight(0.55);
+//      stepTeleopManager.setDesiredBodyHeight(0.55);
 
       QuadrupedTestBehaviors.readyXGait(conductor, variables, stepTeleopManager);
 
@@ -349,7 +349,7 @@ public abstract class Quadruped2018PIDemoTest implements QuadrupedMultiRobotTest
       double walkingSpeed = 0.25;
       double minimumXPositionAfterWalking  = 3.4 + numberOfSteps * stepLength + 1.2;
 
-      double bodyHeight = 0.5;
+      double bodyHeight = 0.43;
       double stanceLength = 0.65;
       double stepGroundClearance = 0.06;
       double endDoubleSupportDuration = 0.15;
@@ -453,7 +453,7 @@ public abstract class Quadruped2018PIDemoTest implements QuadrupedMultiRobotTest
       double yAmp1 = 0.02, yFreq1 = 0.07, yAmp2 = 0.02, yFreq2 = 0.37;
       BumpyGroundProfile groundProfile = new BumpyGroundProfile(xAmp1, xFreq1, xAmp2, xFreq2, yAmp1, yFreq1, yAmp2, yFreq2, 1.2);
 
-      QuadrupedTestFactory quadrupedTestFactory = createQuadrupedTestFactory();
+      quadrupedTestFactory = createQuadrupedTestFactory();
       quadrupedTestFactory.setControlMode(QuadrupedControlMode.FORCE);
       quadrupedTestFactory.setGroundProfile3D(groundProfile);
       quadrupedTestFactory.setUseNetworking(true);
