@@ -13,11 +13,11 @@ import us.ihmc.avatar.drcRobot.DRCRobotModel;
 import us.ihmc.avatar.networkProcessor.kinematicsToolboxModule.HumanoidKinematicsSolver;
 import us.ihmc.avatar.networkProcessor.modules.ToolboxController;
 import us.ihmc.commons.Conversions;
-import us.ihmc.commons.PrintTools;
 import us.ihmc.communication.controllerAPI.CommandInputManager;
 import us.ihmc.communication.controllerAPI.StatusMessageOutputManager;
 import us.ihmc.communication.packets.MessageTools;
 import us.ihmc.communication.packets.PacketDestination;
+import us.ihmc.euclid.utils.NameBasedHashCodeTools;
 import us.ihmc.graphicsDescription.yoGraphics.YoGraphicsListRegistry;
 import us.ihmc.humanoidRobotics.communication.packets.KinematicsToolboxOutputConverter;
 import us.ihmc.humanoidRobotics.communication.packets.manipulation.wholeBodyTrajectory.WholeBodyTrajectoryToolboxMessageTools;
@@ -44,7 +44,7 @@ public class WholeBodyTrajectoryToolboxController extends ToolboxController
 {
    private static final boolean VERBOSE = true;
    private static final int DEFAULT_NUMBER_OF_ITERATIONS_FOR_SHORTCUT_OPTIMIZATION = 10;
-   private static final int DEFAULT_MAXIMUM_EXPANSION_SIZE_VALUE = 1000;
+   private static final int DEFAULT_MAXIMUM_EXPANSION_SIZE_VALUE = 500;
    private static final int DEFAULT_NUMBER_OF_INITIAL_GUESSES_VALUE = 100;
    private static final int DEFAULT_NUMBER_OF_WAYPOINTS_TO_GOAL = 30;
 
@@ -106,7 +106,6 @@ public class WholeBodyTrajectoryToolboxController extends ToolboxController
                                                YoGraphicsListRegistry yoGraphicsListRegistry, boolean visualize)
    {
       super(statusOutputManager, registry);
-      PrintTools.info("visualize " + visualize);
       this.commandInputManager = commandInputManager;
 
       visualizedFullRobotModel = fullRobotModel;
@@ -114,18 +113,16 @@ public class WholeBodyTrajectoryToolboxController extends ToolboxController
 
       this.visualize = visualize;
       if (visualize)
-      {
          treeStateVisualizer = new ExploringProgressVisualizer("TreeStateVisualizer", "VisualizerGraphicsList", yoGraphicsListRegistry, registry);
-      }
       else
-      {
          treeStateVisualizer = null;
-      }
 
       humanoidKinematicsSolver = new HumanoidKinematicsSolver(drcRobotModel, yoGraphicsListRegistry, registry);
 
       toolboxSolution = new WholeBodyTrajectoryToolboxOutputStatus();
       toolboxSolution.setDestination(-1);
+
+      initialConfiguration.setJointNameHash((int) NameBasedHashCodeTools.computeArrayHashCode(FullRobotModelUtils.getAllJointsExcludingHands(visualizedFullRobotModel)));
 
       configurationConverter = new KinematicsToolboxOutputConverter(drcRobotModel);
 
@@ -548,8 +545,8 @@ public class WholeBodyTrajectoryToolboxController extends ToolboxController
       public void onEntry()
       {
          if (VERBOSE)
-            System.out.println("onEntry " + getClass().getSimpleName()+" "+validNodes.size());
-         
+            System.out.println("onEntry " + getClass().getSimpleName() + " " + validNodes.size());
+
          lastStepProgress = 0.0;
          numberOfUpdate = 0;
          startTime = System.nanoTime();
