@@ -358,8 +358,7 @@ public class GraspingJavaFXController
             switch (shapeToCreate)
             {
             case Sphere:
-               Sphere3D sphere = new Sphere3D(sphereRadius.get().doubleValue());
-               sphere.setPosition(controlPosition);
+               Sphere3D sphere = new Sphere3D(controlPosition, sphereRadius.get().doubleValue());
                listOfShape3D.add(sphere);
                break;
             case Cylinder:
@@ -375,7 +374,8 @@ public class GraspingJavaFXController
                listOfShape3D.add(torus);
                break;
             case Box:
-               // TODO : implements with UI.
+               Box3D box = new Box3D(controlPosition, controlOrientation, boxLength.get().doubleValue(), boxWidth.get().doubleValue(), boxHeight.get().doubleValue());
+               listOfShape3D.add(box);
                break;
             default:
                break;
