@@ -138,7 +138,7 @@ public class ReachingManifoldCommand
    @Override
    public boolean isCommandValid()
    {
-      return true;
+      return !manifoldOriginPosition.containsNaN() && !manifoldOriginOrientation.containsNaN();
    }
 
    public RigidBody getRigidBody()
