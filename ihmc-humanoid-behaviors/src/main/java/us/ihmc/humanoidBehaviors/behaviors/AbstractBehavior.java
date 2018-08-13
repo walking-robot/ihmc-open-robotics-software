@@ -68,7 +68,6 @@ public abstract class AbstractBehavior implements RobotController
 
    protected final MessageTopicNameGenerator footstepPlanningToolboxSubGenerator, footstepPlanningToolboxPubGenerator;
    protected final MessageTopicNameGenerator kinematicsToolboxSubGenerator, kinematicsToolboxPubGenerator;
-   protected final MessageTopicNameGenerator wholebodyTrajectoryToolboxSubGenerator, wholebodyTrajectoryToolboxPubGenerator;
 
    public AbstractBehavior(String robotName, Ros2Node ros2Node)
    {
@@ -95,8 +94,6 @@ public abstract class AbstractBehavior implements RobotController
       footstepPlanningToolboxPubGenerator = ROS2Tools.getTopicNameGenerator(robotName, ROS2Tools.FOOTSTEP_PLANNER_TOOLBOX, ROS2TopicQualifier.OUTPUT);
       kinematicsToolboxSubGenerator = ROS2Tools.getTopicNameGenerator(robotName, ROS2Tools.KINEMATICS_TOOLBOX, ROS2TopicQualifier.INPUT);
       kinematicsToolboxPubGenerator = ROS2Tools.getTopicNameGenerator(robotName, ROS2Tools.KINEMATICS_TOOLBOX, ROS2TopicQualifier.OUTPUT);
-      wholebodyTrajectoryToolboxSubGenerator = ROS2Tools.getTopicNameGenerator(robotName, ROS2Tools.WHOLE_BODY_TRAJECTORY_TOOLBOX, ROS2TopicQualifier.INPUT);
-      wholebodyTrajectoryToolboxPubGenerator = ROS2Tools.getTopicNameGenerator(robotName, ROS2Tools.WHOLE_BODY_TRAJECTORY_TOOLBOX, ROS2TopicQualifier.OUTPUT);
 
       controllerSubGenerator = ControllerAPIDefinition.getSubscriberTopicNameGenerator(robotName);
       controllerPubGenerator = ControllerAPIDefinition.getPublisherTopicNameGenerator(robotName);
