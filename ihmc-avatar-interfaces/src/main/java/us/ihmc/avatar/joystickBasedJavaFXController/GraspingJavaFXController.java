@@ -124,7 +124,8 @@ public class GraspingJavaFXController
    public GraspingJavaFXController(String robotName, JavaFXMessager messager, Ros2Node ros2Node, FullHumanoidRobotModelFactory fullRobotModelFactory,
                                    JavaFXRobotVisualizer javaFXRobotVisualizer)
    {
-      motionPreviewVisualizer = new GraspingJavaFXMotionPreviewVisualizer(fullRobotModelFactory);;
+      motionPreviewVisualizer = new GraspingJavaFXMotionPreviewVisualizer(fullRobotModelFactory);
+      ;
       fullRobotModel = javaFXRobotVisualizer.getFullRobotModel();
       sphereRadius = messager.createInput(GraspingJavaFXTopics.SphereRadius, 0.1);
 
@@ -232,8 +233,7 @@ public class GraspingJavaFXController
             }
 
             System.out.println("number of manifolds " + reachingManifoldMessages.size());
-            WholeBodyTrajectoryToolboxMessage wbtmessage = ReachingManifoldTools.createReachingWholeBodyTrajectoryToolboxMessage(fullRobotModel, hand,
-                                                                                                                                 robotSide,
+            WholeBodyTrajectoryToolboxMessage wbtmessage = ReachingManifoldTools.createReachingWholeBodyTrajectoryToolboxMessage(fullRobotModel, robotSide,
                                                                                                                                  reachingManifoldMessages, 5.0);
 
             toolboxMessagePublisher.publish(wbtmessage);

@@ -125,26 +125,26 @@ public class ReachingManifoldTools
       return graphics;
    }
 
-   public static WholeBodyTrajectoryToolboxMessage createReachingWholeBodyTrajectoryToolboxMessage(FullHumanoidRobotModel fullRobotModel, RigidBody hand,
-                                                                                                   RobotSide robotSide,
+   public static WholeBodyTrajectoryToolboxMessage createReachingWholeBodyTrajectoryToolboxMessage(FullHumanoidRobotModel fullRobotModel, RobotSide robotSide,
                                                                                                    List<ReachingManifoldMessage> reachingManifoldMessages,
                                                                                                    double desiredTrajectoryTime)
    {
-      // input
+      RigidBody hand = fullRobotModel.getHand(robotSide);
       double extrapolateRatio = ReachingManifoldTools.extrapolateRatio;
       double trajectoryTimeBeforeExtrapolated = desiredTrajectoryTime;
       double trajectoryTime = trajectoryTimeBeforeExtrapolated * extrapolateRatio;
 
-      // wbt toolbox configuration message
+      // configuration message
       WholeBodyTrajectoryToolboxConfigurationMessage configuration = new WholeBodyTrajectoryToolboxConfigurationMessage();
       configuration.getInitialConfiguration().set(HumanoidMessageTools.createKinematicsToolboxOutputStatus(fullRobotModel));
-      configuration.setMaximumExpansionSize(1000);
+      configuration.setMaximumExpansionSize(500);
 
-      // trajectory message
+      // messages
       List<WaypointBasedTrajectoryMessage> handTrajectories = new ArrayList<>();
       List<RigidBodyExplorationConfigurationMessage> rigidBodyConfigurations = new ArrayList<>();
       List<ReachingManifoldMessage> reachingManifolds = new ArrayList<>();
 
+      // TODO : increase number of resolution.
       double timeResolution = trajectoryTime / 20.0;
 
       MovingReferenceFrame handControlFrame = fullRobotModel.getHandControlFrame(robotSide);
