@@ -8,8 +8,6 @@ import us.ihmc.javaFXToolkit.messager.MessageBidirectionalBinding.PropertyToMess
 
 public class GraspingObjectPaneController
 {
-   private JavaFXMessager messager;
-
    @FXML
    private Slider sliderSphereRadius;
 
@@ -44,23 +42,17 @@ public class GraspingObjectPaneController
 
    public void initialize(JavaFXMessager messager)
    {
-      this.messager = messager;
-
-      sliderSphereRadius.setValue(0.1);
       messager.bindBidirectional(GraspingJavaFXTopics.SphereRadius, sliderSphereRadius.valueProperty(), createConverter(), true);
-      
+
       messager.bindBidirectional(GraspingJavaFXTopics.CylinderRadius, sliderCylinderRadius.valueProperty(), createConverter(), true);
       messager.bindBidirectional(GraspingJavaFXTopics.CylinderHeight, sliderCylinderHeight.valueProperty(), createConverter(), true);
-      
+
       messager.bindBidirectional(GraspingJavaFXTopics.TorusRadius, sliderTorusRadius.valueProperty(), createConverter(), true);
       messager.bindBidirectional(GraspingJavaFXTopics.TorusTubeRadius, sliderTorusTube.valueProperty(), createConverter(), true);
-      
-//      messager.bindBidirectional(GraspingJavaFXTopics., sliderBoxLength.valueProperty(), createConverter(), true);
-//      messager.bindBidirectional(GraspingJavaFXTopics.SphereRadius, sliderBoxWidth.valueProperty(), createConverter(), true);
-//      messager.bindBidirectional(GraspingJavaFXTopics.SphereRadius, sliderBoxHeight.valueProperty(), createConverter(), true);
-      
-      
-      int selectedIndex = tapPaneShape.getSelectionModel().getSelectedIndex();
+
+      messager.bindBidirectional(GraspingJavaFXTopics.BoxLength, sliderBoxLength.valueProperty(), createConverter(), true);
+      messager.bindBidirectional(GraspingJavaFXTopics.BoxWidth, sliderBoxWidth.valueProperty(), createConverter(), true);
+      messager.bindBidirectional(GraspingJavaFXTopics.BoxHeight, sliderBoxHeight.valueProperty(), createConverter(), true);
    }
 
    private PropertyToMessageTypeConverter<Double, Number> createConverter()
@@ -80,32 +72,4 @@ public class GraspingObjectPaneController
          }
       };
    }
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
 }

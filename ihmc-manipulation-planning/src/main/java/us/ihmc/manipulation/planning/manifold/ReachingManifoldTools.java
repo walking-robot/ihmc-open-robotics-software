@@ -262,8 +262,8 @@ public class ReachingManifoldTools
       ReachingManifoldMessage bottomMessage = HumanoidMessageTools.createReachingManifoldMessage(hand);
 
       ConfigurationSpaceName[] sideSpaces = {ConfigurationSpaceName.YAW, ConfigurationSpaceName.Z, ConfigurationSpaceName.Y};
-      double[] sideLowerLimits = new double[] {-Math.PI, -height / 2, robotSide.negateIfRightSide(radius)};
-      double[] sideUpperLimits = new double[] {Math.PI, height / 2, robotSide.negateIfRightSide(radius)};
+      double[] sideLowerLimits = new double[] {-Math.PI, 0.0, robotSide.negateIfRightSide(radius)};
+      double[] sideUpperLimits = new double[] {Math.PI, height, robotSide.negateIfRightSide(radius)};
 
       sideMessage.getManifoldOriginPosition().set(manifoldOriginPosition);
       sideMessage.getManifoldOriginOrientation().set(manifoldOriginOrientation);
@@ -271,8 +271,8 @@ public class ReachingManifoldTools
       HumanoidMessageTools.packManifold(ConfigurationSpaceName.toBytes(sideSpaces), sideLowerLimits, sideUpperLimits, sideMessage);
 
       ConfigurationSpaceName[] topSpaces = {ConfigurationSpaceName.Y, ConfigurationSpaceName.PITCH, ConfigurationSpaceName.X};
-      double[] topLowerLimits = new double[] {height / 2 - thicknessForViz, -Math.PI, -radius * topAreaReductionRatio};
-      double[] topUpperLimits = new double[] {height / 2, Math.PI, radius * topAreaReductionRatio};
+      double[] topLowerLimits = new double[] {height - thicknessForViz, -Math.PI, -radius * topAreaReductionRatio};
+      double[] topUpperLimits = new double[] {height, Math.PI, radius * topAreaReductionRatio};
 
       topMessage.getManifoldOriginPosition().set(manifoldOriginPosition);
       RotationMatrix topOrientation = new RotationMatrix(manifoldOriginOrientation);
@@ -282,8 +282,8 @@ public class ReachingManifoldTools
       HumanoidMessageTools.packManifold(ConfigurationSpaceName.toBytes(topSpaces), topLowerLimits, topUpperLimits, topMessage);
 
       ConfigurationSpaceName[] bottomSpaces = {ConfigurationSpaceName.Y, ConfigurationSpaceName.PITCH, ConfigurationSpaceName.X};
-      double[] bottomLowerLimits = new double[] {height / 2 - thicknessForViz, -Math.PI, -radius * topAreaReductionRatio};
-      double[] bottomUpperLimits = new double[] {height / 2, Math.PI, radius * topAreaReductionRatio};
+      double[] bottomLowerLimits = new double[] {0.0 - thicknessForViz, -Math.PI, -radius * topAreaReductionRatio};
+      double[] bottomUpperLimits = new double[] {0.0, Math.PI, radius * topAreaReductionRatio};
 
       bottomMessage.getManifoldOriginPosition().set(manifoldOriginPosition);
       RotationMatrix bottomOrientation = new RotationMatrix(manifoldOriginOrientation);

@@ -13,9 +13,6 @@ public class GraspingPaneController
    private GraspingObjectPaneController graspingObjectPaneController;
 
    @FXML
-   private GraspingToolboxPaneController graspingToolboxPaneController;
-
-   @FXML
    private GraspingFingerPaneController graspingFingerPaneController;
 
    public GraspingPaneController()
@@ -26,7 +23,6 @@ public class GraspingPaneController
    public void initialize(JavaFXMessager messager)
    {
       graspingObjectPaneController.initialize(messager);
-      graspingToolboxPaneController.initialize(messager);
       graspingFingerPaneController.initialize(messager);
    }
 }

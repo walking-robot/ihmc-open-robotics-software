@@ -78,6 +78,10 @@ public class GraspingJavaFXController
    private final AtomicReference<Double> torusRadius;
    private final AtomicReference<Double> torusTube;
 
+   private final AtomicReference<Double> boxLength;
+   private final AtomicReference<Double> boxWidth;
+   private final AtomicReference<Double> boxHeight;
+
    private final AnimationTimer animationTimer;
 
    private final Group rootNode = new Group();
@@ -134,6 +138,10 @@ public class GraspingJavaFXController
 
       torusRadius = messager.createInput(GraspingJavaFXTopics.TorusRadius, 0.1);
       torusTube = messager.createInput(GraspingJavaFXTopics.TorusTubeRadius, 0.1);
+
+      boxLength = messager.createInput(GraspingJavaFXTopics.BoxLength);
+      boxWidth = messager.createInput(GraspingJavaFXTopics.BoxWidth);
+      boxHeight = messager.createInput(GraspingJavaFXTopics.BoxHeight);
 
       // register xbox events
       messager.registerTopicListener(XBoxOneJavaFXController.ButtonSelectState, state -> clearObjects(state));
@@ -429,6 +437,7 @@ public class GraspingJavaFXController
       }
       else if (shape3D instanceof Box3D)
       {
+         ((Box3D) shape3D).setSize(boxLength.get().doubleValue(), boxWidth.get().doubleValue(), boxHeight.get().doubleValue());
          ;
       }
    }
