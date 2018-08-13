@@ -24,7 +24,6 @@ public class JoystickBasedGraspingMainUI
    private final Stage primaryStage;
    private final BorderPane mainPane;
 
-   //private final GraspingJavaFXMotionPreviewVisualizer motionPreviewVisualizer;
    private final GraspingJavaFXController graspingJavaFXController;
    private final JavaFXRobotVisualizer javaFXRobotVisualizer;
 
@@ -57,12 +56,8 @@ public class JoystickBasedGraspingMainUI
                                            s -> javaFXRobotVisualizer.submitNewConfiguration(s.takeNextData()));
       view3dFactory.addNodeToView(javaFXRobotVisualizer.getRootNode());
 
-//      motionPreviewVisualizer = new GraspingJavaFXMotionPreviewVisualizer(fullRobotModelFactory);
-//      view3dFactory.addNodeToView(motionPreviewVisualizer.getRootNode());
-      
       graspingJavaFXController = new GraspingJavaFXController(robotName, messager, ros2Node, fullRobotModelFactory, javaFXRobotVisualizer);
       view3dFactory.addNodeToView(graspingJavaFXController.getRootNode());
-      
       
       messager.startMessager();
 
