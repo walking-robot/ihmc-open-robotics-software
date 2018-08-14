@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
-import controller_msgs.msg.dds.ChestTrajectoryMessage;
 import controller_msgs.msg.dds.ReachingManifoldMessage;
 import controller_msgs.msg.dds.ToolboxStateMessage;
 import controller_msgs.msg.dds.WholeBodyTrajectoryMessage;
@@ -35,14 +34,13 @@ import us.ihmc.euclid.geometry.Shape3D;
 import us.ihmc.euclid.geometry.Sphere3D;
 import us.ihmc.euclid.geometry.Torus3D;
 import us.ihmc.euclid.matrix.RotationMatrix;
-import us.ihmc.euclid.referenceFrame.ReferenceFrame;
 import us.ihmc.euclid.tuple3D.Point3D;
+import us.ihmc.euclid.tuple3D.Vector3D;
 import us.ihmc.euclid.tuple4D.Quaternion;
 import us.ihmc.graphicsDescription.MeshDataBuilder;
 import us.ihmc.graphicsDescription.MeshDataGenerator;
 import us.ihmc.graphicsDescription.MeshDataHolder;
-import us.ihmc.humanoidRobotics.communication.packets.HumanoidMessageTools;
-import us.ihmc.humanoidRobotics.frames.HumanoidReferenceFrames;
+import us.ihmc.humanoidRobotics.communication.packets.WholeBodyTrajectoryToolboxOutputConverter;
 import us.ihmc.javaFXToolkit.JavaFXTools;
 import us.ihmc.javaFXToolkit.graphics.JavaFXMeshDataInterpreter;
 import us.ihmc.javaFXToolkit.messager.JavaFXMessager;
@@ -64,9 +62,9 @@ import us.ihmc.ros2.Ros2Node;
 
 public class GraspingJavaFXController
 {
-   // TODO : visualize the result came from WholeBodyTrajctoryToolbox.
-
    private final FullHumanoidRobotModel fullRobotModel;
+
+   private final WholeBodyTrajectoryToolboxOutputConverter outputConverter;
 
    private final AtomicReference<List<Node>> objectsToVisualizeReference = new AtomicReference<>(new ArrayList<>());
 
@@ -86,7 +84,8 @@ public class GraspingJavaFXController
 
    private final Group rootNode = new Group();
 
-   private final Point3D controlPosition = new Point3D(0.6, 0.3, 1.0);
+   private final static Vector3D defaultPositionToCreateObject = new Vector3D(0.6, 0.3, 1.0);
+   private final Point3D controlPosition = new Point3D(defaultPositionToCreateObject);
    private final RotationMatrix controlOrientation = new RotationMatrix();
 
    private final static double ratioJoyStickToPosition = 0.01;
@@ -129,8 +128,10 @@ public class GraspingJavaFXController
                                    JavaFXRobotVisualizer javaFXRobotVisualizer)
    {
       motionPreviewVisualizer = new GraspingJavaFXMotionPreviewVisualizer(fullRobotModelFactory);
-      ;
+
       fullRobotModel = javaFXRobotVisualizer.getFullRobotModel();
+      outputConverter = new WholeBodyTrajectoryToolboxOutputConverter(fullRobotModelFactory);
+
       sphereRadius = messager.createInput(GraspingJavaFXTopics.SphereRadius, 0.1);
 
       cylinderRadius = messager.createInput(GraspingJavaFXTopics.CylinderRadius, 0.1);
@@ -143,7 +144,6 @@ public class GraspingJavaFXController
       boxWidth = messager.createInput(GraspingJavaFXTopics.BoxWidth);
       boxHeight = messager.createInput(GraspingJavaFXTopics.BoxHeight);
 
-      // register xbox events
       messager.registerTopicListener(XBoxOneJavaFXController.ButtonSelectState, state -> clearObjects(state));
       messager.registerTopicListener(XBoxOneJavaFXController.ButtonStartState, state -> switchShapeToCreate(state));
       messager.registerTopicListener(XBoxOneJavaFXController.ButtonAState, state -> createObject(state));
@@ -162,7 +162,6 @@ public class GraspingJavaFXController
       messager.registerTopicListener(XBoxOneJavaFXController.ButtonXState, state -> sendReachingManifoldsToToolbox(state));
       messager.registerTopicListener(XBoxOneJavaFXController.ButtonYState, state -> confirmReachingMotion(state));
 
-      // Ros messager
       ROS2Tools.MessageTopicNameGenerator toolboxRequestTopicNameGenerator = WholeBodyTrajectoryToolboxModule.getInputTopicNameGenerator(robotName);
       ROS2Tools.MessageTopicNameGenerator toolboxResponseTopicNameGenerator = WholeBodyTrajectoryToolboxModule.getOutputTopicNameGenerator(robotName);
       MessageTopicNameGenerator subscriberTopicNameGenerator = ControllerAPIDefinition.getSubscriberTopicNameGenerator(robotName);
@@ -202,6 +201,7 @@ public class GraspingJavaFXController
       {
          if (listOfShape3D.size() > 0)
          {
+            motionPreviewVisualizer.enable(false);
             toolboxStatePublisher.publish(MessageTools.createToolboxStateMessage(ToolboxState.WAKE_UP));
 
             // TODO : fix another side? or not (Optional).
@@ -256,27 +256,16 @@ public class GraspingJavaFXController
    {
       if (state == ButtonState.PRESSED)
       {
-         // TODO : from output status.
          PrintTools.info("confirmReachingMotion");
 
-         HumanoidReferenceFrames humanoidReferenceFrames = new HumanoidReferenceFrames(fullRobotModel);
-         ReferenceFrame worldFrame = ReferenceFrame.getWorldFrame();
-         ReferenceFrame pelvisZUpFrame = humanoidReferenceFrames.getPelvisZUpFrame();
+         motionPreviewVisualizer.enable(false);
 
-         WholeBodyTrajectoryMessage wholeBodyTrajectoryMessage = new WholeBodyTrajectoryMessage();
+         WholeBodyTrajectoryMessage message = new WholeBodyTrajectoryMessage();
 
-         Point3D desiredPosition = new Point3D(0.6, 0.3, 1.1);
-         Quaternion desiredOrientation = new Quaternion();
-         desiredOrientation.appendPitchRotation(Math.PI * 0.25);
+         outputConverter.setMessageToCreate(message);
+         outputConverter.updateFullRobotModel(toolboxOutputPacket.get());
 
-         wholeBodyTrajectoryMessage.getLeftHandTrajectoryMessage()
-                                   .set(HumanoidMessageTools.createHandTrajectoryMessage(RobotSide.LEFT, 2.0, desiredPosition, desiredOrientation, worldFrame));
-
-         ChestTrajectoryMessage chestTrajectoryMessage = HumanoidMessageTools.createChestTrajectoryMessage(2.0, desiredOrientation, pelvisZUpFrame);
-         chestTrajectoryMessage.getSo3Trajectory().getFrameInformation().setDataReferenceFrameId(MessageTools.toFrameId(ReferenceFrame.getWorldFrame()));
-         wholeBodyTrajectoryMessage.getChestTrajectoryMessage().set(chestTrajectoryMessage);
-
-         wholeBodyTrajectoryPublisher.publish(wholeBodyTrajectoryMessage);
+         wholeBodyTrajectoryPublisher.publish(message);
       }
    }
 
@@ -374,7 +363,8 @@ public class GraspingJavaFXController
                listOfShape3D.add(torus);
                break;
             case Box:
-               Box3D box = new Box3D(controlPosition, controlOrientation, boxLength.get().doubleValue(), boxWidth.get().doubleValue(), boxHeight.get().doubleValue());
+               Box3D box = new Box3D(controlPosition, controlOrientation, boxLength.get().doubleValue(), boxWidth.get().doubleValue(),
+                                     boxHeight.get().doubleValue());
                listOfShape3D.add(box);
                break;
             default:

@@ -11,6 +11,8 @@ import us.ihmc.commons.PrintTools;
 import us.ihmc.communication.packets.MessageTools;
 import us.ihmc.euclid.transform.RigidBodyTransform;
 import us.ihmc.euclid.utils.NameBasedHashCodeTools;
+import us.ihmc.graphicsDescription.appearance.AppearanceDefinition;
+import us.ihmc.graphicsDescription.appearance.YoAppearance;
 import us.ihmc.graphicsDescription.structure.Graphics3DNode;
 import us.ihmc.javaFXToolkit.node.JavaFXGraphics3DNode;
 import us.ihmc.robotModels.FullHumanoidRobotModel;
@@ -23,6 +25,8 @@ import us.ihmc.simulationconstructionset.graphics.GraphicsRobot;
 
 public class GraspingJavaFXMotionPreviewVisualizer
 {
+   private final AppearanceDefinition appearance = YoAppearance.LightPink();
+
    private final GraphicsRobot graphicsRobot;
    private final JavaFXGraphics3DNode rootNode;
    private final FullHumanoidRobotModel fullRobotModel;
@@ -36,7 +40,7 @@ public class GraspingJavaFXMotionPreviewVisualizer
    private WholeBodyTrajectoryToolboxOutputStatus packetInProgress = null;
 
    private final double onetickTime = 0.1;
-   
+
    private final AnimationTimer animationTimer;
 
    public GraspingJavaFXMotionPreviewVisualizer(FullHumanoidRobotModelFactory fullRobotModelFactory)
@@ -61,14 +65,16 @@ public class GraspingJavaFXMotionPreviewVisualizer
             {
                packetInProgress = null;
                localTime = 0;
+               rootNode.setVisible(false);
                return;
             }
-            
+
             if (packetInProgress != null)
             {
+               rootNode.setVisible(true);
                double trajectoryTime = packetInProgress.getTrajectoryTimes().get(packetInProgress.getTrajectoryTimes().size() - 1);
 
-               KinematicsToolboxOutputStatus toShowOutputStatus = findFrameFromTime(packetInProgress, localTime); //get close outputstatus based on inverseKinematicsSolution.trajectoryTimes.
+               KinematicsToolboxOutputStatus toShowOutputStatus = findFrameFromTime(packetInProgress, localTime); //get close output status based on inverseKinematicsSolution.trajectoryTimes.
 
                if (toShowOutputStatus == null)
                {
@@ -78,27 +84,16 @@ public class GraspingJavaFXMotionPreviewVisualizer
                }
 
                visualizeFrame(toShowOutputStatus);
-
                localTime += onetickTime;
 
                // for loop
                if (localTime >= trajectoryTime)
                {
-                  // disable(); // It has been more than 'delayBeforeDisabling' number of ticks that we haven't received any KinematicsToolboxOutputStatus, shutting down the visualizer.
                   localTime = 0.0;
                }
             }
 
-            RigidBodyTransform newRootJointPose = newRootJointPoseReference.getAndSet(null);
-            if (newRootJointPose != null)
-               fullRobotModel.getRootJoint().setPositionAndRotation(newRootJointPose);
-
-            float[] newJointConfiguration = newJointConfigurationReference.getAndSet(null);
-            if (newJointConfiguration != null)
-            {
-               for (int i = 0; i < allJoints.length; i++)
-                  allJoints[i].setQ(newJointConfiguration[i]);
-            }
+            updateRobotConfiguration();
             fullRobotModel.getElevator().updateFramesRecursively();
             graphicsRobot.update();
             rootNode.update();
@@ -116,13 +111,6 @@ public class GraspingJavaFXMotionPreviewVisualizer
       animationTimer.stop();
    }
 
-   private void addNodesRecursively(Graphics3DNode graphics3dNode, JavaFXGraphics3DNode parentNode)
-   {
-      JavaFXGraphics3DNode node = new JavaFXGraphics3DNode(graphics3dNode);
-      parentNode.addChild(node);
-      graphics3dNode.getChildrenNodes().forEach(child -> addNodesRecursively(child, node));
-   }
-
    public void enable(boolean value)
    {
       enable.set(value);
@@ -131,8 +119,9 @@ public class GraspingJavaFXMotionPreviewVisualizer
    public void submitWholeBodyTrajectoryToolboxOutputStatus(WholeBodyTrajectoryToolboxOutputStatus outputStatus)
    {
       packetInProgress = outputStatus;
-      PrintTools.info("planning_result_ "+packetInProgress.planning_result_);
-      PrintTools.info("robot_configurations_ "+packetInProgress.robot_configurations_.size());
+      System.out.println("submitWholeBodyTrajectoryToolboxOutputStatus");
+      System.out.println("planning_result_ " + packetInProgress.planning_result_);
+      System.out.println("robot_configurations_ " + packetInProgress.robot_configurations_.size());
    }
 
    public FullHumanoidRobotModel getFullRobotModel()
@@ -143,6 +132,13 @@ public class GraspingJavaFXMotionPreviewVisualizer
    public Node getRootNode()
    {
       return rootNode;
+   }
+
+   private void addNodesRecursively(Graphics3DNode graphics3dNode, JavaFXGraphics3DNode parentNode)
+   {
+      JavaFXGraphics3DNode node = new JavaFXGraphics3DNode(graphics3dNode, appearance);
+      parentNode.addChild(node);
+      graphics3dNode.getChildrenNodes().forEach(child -> addNodesRecursively(child, node));
    }
 
    private KinematicsToolboxOutputStatus findFrameFromTime(WholeBodyTrajectoryToolboxOutputStatus outputStatus, double time)
@@ -194,5 +190,19 @@ public class GraspingJavaFXMotionPreviewVisualizer
 
       newRootJointPoseReference.set(new RigidBodyTransform(frame.getDesiredRootOrientation(), frame.getDesiredRootTranslation()));
       newJointConfigurationReference.set(joints);
+   }
+
+   private void updateRobotConfiguration()
+   {
+      RigidBodyTransform newRootJointPose = newRootJointPoseReference.getAndSet(null);
+      if (newRootJointPose != null)
+         fullRobotModel.getRootJoint().setPositionAndRotation(newRootJointPose);
+
+      float[] newJointConfiguration = newJointConfigurationReference.getAndSet(null);
+      if (newJointConfiguration != null)
+      {
+         for (int i = 0; i < allJoints.length; i++)
+            allJoints[i].setQ(newJointConfiguration[i]);
+      }
    }
 }
