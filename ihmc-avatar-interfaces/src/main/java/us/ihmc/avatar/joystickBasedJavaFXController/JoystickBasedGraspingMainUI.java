@@ -3,15 +3,20 @@ package us.ihmc.avatar.joystickBasedJavaFXController;
 import java.io.IOException;
 
 import controller_msgs.msg.dds.RobotConfigurationData;
+import javafx.animation.AnimationTimer;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
 import us.ihmc.commonWalkingControlModules.highLevelHumanoidControl.factories.ControllerAPIDefinition;
 import us.ihmc.commons.thread.ThreadTools;
 import us.ihmc.communication.ROS2Tools;
+import us.ihmc.euclid.referenceFrame.FramePoint3D;
+import us.ihmc.euclid.referenceFrame.ReferenceFrame;
+import us.ihmc.euclid.tuple3D.interfaces.Point3DReadOnly;
 import us.ihmc.javaFXToolkit.cameraControllers.FocusBasedCameraMouseEventHandler;
 import us.ihmc.javaFXToolkit.messager.JavaFXMessager;
 import us.ihmc.javaFXToolkit.messager.SharedMemoryJavaFXMessager;
@@ -29,6 +34,8 @@ public class JoystickBasedGraspingMainUI
 
    private final JavaFXMessager messager = new SharedMemoryJavaFXMessager(GraspingJavaFXTopics.API);
    private final XBoxOneJavaFXController xBoxOneJavaFXController;
+   
+   private final AnimationTimer cameraTracking;
 
    @FXML
    private GraspingPaneController graspingPaneController;
@@ -46,7 +53,7 @@ public class JoystickBasedGraspingMainUI
       mainPane = loader.load();
 
       View3DFactory view3dFactory = View3DFactory.createSubscene();
-      FocusBasedCameraMouseEventHandler cameraController = view3dFactory.addCameraController(true);
+      
       view3dFactory.addWorldCoordinateSystem(0.3);
       Pane subScene = view3dFactory.getSubSceneWrappedInsidePane();
       mainPane.setCenter(subScene);
@@ -58,6 +65,23 @@ public class JoystickBasedGraspingMainUI
 
       graspingJavaFXController = new GraspingJavaFXController(robotName, messager, ros2Node, fullRobotModelFactory, javaFXRobotVisualizer);
       view3dFactory.addNodeToView(graspingJavaFXController.getRootNode());
+      
+      FocusBasedCameraMouseEventHandler cameraController = view3dFactory.addCameraController(true);
+      
+      Translate rootJointOffset = new Translate();
+      cameraController.prependTransform(rootJointOffset);
+      
+      cameraTracking = new AnimationTimer()
+      {
+         @Override
+         public void handle(long now)
+         {
+            Point3DReadOnly controlObjectPosition = graspingJavaFXController.getControlObjectPosition();
+            rootJointOffset.setX(controlObjectPosition.getX());
+            rootJointOffset.setY(controlObjectPosition.getY());
+            rootJointOffset.setZ(controlObjectPosition.getZ());
+         }
+      };
       
       messager.startMessager();
 
@@ -74,8 +98,8 @@ public class JoystickBasedGraspingMainUI
    {
       primaryStage.show();
       javaFXRobotVisualizer.start();
-
       graspingJavaFXController.start();
+      cameraTracking.start();
    }
 
    public void stop()
@@ -90,8 +114,8 @@ public class JoystickBasedGraspingMainUI
       }
       xBoxOneJavaFXController.stop();
       javaFXRobotVisualizer.stop();
-
       graspingJavaFXController.stop();
+      cameraTracking.stop();
 
       ThreadTools.sleep(100); // Give some time to send the message.:
    }

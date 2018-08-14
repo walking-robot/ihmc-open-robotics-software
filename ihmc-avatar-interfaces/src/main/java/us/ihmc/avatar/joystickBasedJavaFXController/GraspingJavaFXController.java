@@ -36,6 +36,7 @@ import us.ihmc.euclid.geometry.Torus3D;
 import us.ihmc.euclid.matrix.RotationMatrix;
 import us.ihmc.euclid.tuple3D.Point3D;
 import us.ihmc.euclid.tuple3D.Vector3D;
+import us.ihmc.euclid.tuple3D.interfaces.Point3DReadOnly;
 import us.ihmc.euclid.tuple4D.Quaternion;
 import us.ihmc.graphicsDescription.MeshDataBuilder;
 import us.ihmc.graphicsDescription.MeshDataGenerator;
@@ -502,6 +503,11 @@ public class GraspingJavaFXController
          children.clear();
          children.addAll(objectsToVisualize);
       }
+   }
+   
+   public Point3DReadOnly getControlObjectPosition()
+   {
+      return controlPosition;
    }
 
    public void start()
