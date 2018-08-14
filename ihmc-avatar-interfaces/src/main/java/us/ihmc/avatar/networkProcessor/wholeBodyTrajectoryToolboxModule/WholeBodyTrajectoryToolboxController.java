@@ -13,6 +13,7 @@ import us.ihmc.avatar.drcRobot.DRCRobotModel;
 import us.ihmc.avatar.networkProcessor.kinematicsToolboxModule.HumanoidKinematicsSolver;
 import us.ihmc.avatar.networkProcessor.modules.ToolboxController;
 import us.ihmc.commons.Conversions;
+import us.ihmc.commons.PrintTools;
 import us.ihmc.communication.controllerAPI.CommandInputManager;
 import us.ihmc.communication.controllerAPI.StatusMessageOutputManager;
 import us.ihmc.communication.packets.MessageTools;
@@ -122,7 +123,7 @@ public class WholeBodyTrajectoryToolboxController extends ToolboxController
       toolboxSolution = new WholeBodyTrajectoryToolboxOutputStatus();
       toolboxSolution.setDestination(-1);
 
-      initialConfiguration.setJointNameHash((int) NameBasedHashCodeTools.computeArrayHashCode(FullRobotModelUtils.getAllJointsExcludingHands(visualizedFullRobotModel)));
+      initialConfiguration.setJointNameHash(setJointNameHashFromRobotModelWithExcludingHands());
 
       configurationConverter = new KinematicsToolboxOutputConverter(drcRobotModel);
 
@@ -131,6 +132,11 @@ public class WholeBodyTrajectoryToolboxController extends ToolboxController
       exploringState = new ExploringState(DEFAULT_MAXIMUM_EXPANSION_SIZE_VALUE);
       shorcutState = new ShorcutState(DEFAULT_NUMBER_OF_ITERATIONS_FOR_SHORTCUT_OPTIMIZATION);
       stateMachine = setupStateMachine();
+   }
+
+   private int setJointNameHashFromRobotModelWithExcludingHands()
+   {
+      return (int) NameBasedHashCodeTools.computeArrayHashCode(FullRobotModelUtils.getAllJointsExcludingHands(visualizedFullRobotModel));
    }
 
    private StateMachine<ToolboxStateName, WholeBodyTrajectoryToolboxState> setupStateMachine()
@@ -271,6 +277,7 @@ public class WholeBodyTrajectoryToolboxController extends ToolboxController
       if (newInitialConfiguration != null)
       {
          initialConfiguration.set(newInitialConfiguration);
+         initialConfiguration.setJointNameHash(setJointNameHashFromRobotModelWithExcludingHands());
          return true;
       }
 
@@ -281,7 +288,7 @@ public class WholeBodyTrajectoryToolboxController extends ToolboxController
       initialConfiguration.getDesiredRootOrientation().set(currentRobotConfiguration.getRootOrientation());
       initialConfiguration.getDesiredRootTranslation().set(currentRobotConfiguration.getRootTranslation());
 
-      initialConfiguration.setJointNameHash(currentRobotConfiguration.getJointNameHash());
+      initialConfiguration.setJointNameHash(setJointNameHashFromRobotModelWithExcludingHands());
       MessageTools.copyData(currentRobotConfiguration.getJointAngles(), initialConfiguration.getDesiredJointAngles());
 
       return true;
