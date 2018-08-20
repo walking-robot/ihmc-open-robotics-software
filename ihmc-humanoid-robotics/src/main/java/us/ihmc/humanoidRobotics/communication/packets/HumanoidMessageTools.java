@@ -89,6 +89,7 @@ import controller_msgs.msg.dds.SpineTrajectoryMessage;
 import controller_msgs.msg.dds.StampedPosePacket;
 import controller_msgs.msg.dds.StateEstimatorModePacket;
 import controller_msgs.msg.dds.TrajectoryPoint1DMessage;
+import controller_msgs.msg.dds.ValkyrieHandFingerTrajectoryMessage;
 import controller_msgs.msg.dds.ValveLocationPacket;
 import controller_msgs.msg.dds.VehiclePosePacket;
 import controller_msgs.msg.dds.VideoPacket;
@@ -297,6 +298,27 @@ public class HumanoidMessageTools
    {
       ArmTrajectoryMessage message = new ArmTrajectoryMessage();
       message.setRobotSide(robotSide.toByte());
+      return message;
+   }
+
+   public static ValkyrieHandFingerTrajectoryMessage createValkyrieHandFingerTrajectoryMessage(RobotSide robotSide, byte[] valkyrieFingerMotorNames,
+                                                                                               double trajectoryTime, double[] desiredJointPositions,
+                                                                                               double[] executionDelayTimes)
+   {
+      ValkyrieHandFingerTrajectoryMessage message = new ValkyrieHandFingerTrajectoryMessage();
+
+      message.setRobotSide(robotSide.toByte());
+
+      int dimension = valkyrieFingerMotorNames.length;
+
+      for (int i = 0; i < dimension; i++)
+         message.getFingerMotorNames().add(valkyrieFingerMotorNames[i]);
+
+      message.getJointspaceTrajectory().set(createJointspaceTrajectoryMessage(trajectoryTime, desiredJointPositions));
+
+      for (int i = 0; i < dimension; i++)
+         message.getDelayTimes().add(desiredJointPositions[i]);
+
       return message;
    }
 
@@ -1410,6 +1432,14 @@ public class HumanoidMessageTools
          oneDoFJointTrajectoryMessage.setWeight(weights[jointIndex]);
          message.getJointTrajectoryMessages().add().set(oneDoFJointTrajectoryMessage);
       }
+      return message;
+   }
+   
+   public static JointspaceTrajectoryMessage createJointspaceTrajectoryMessage(double[] trajectoryTimes, double[] desiredJointPositions)
+   {
+      JointspaceTrajectoryMessage message = new JointspaceTrajectoryMessage();
+      for (int jointIndex = 0; jointIndex < desiredJointPositions.length; jointIndex++)
+         message.getJointTrajectoryMessages().add().set(createOneDoFJointTrajectoryMessage(trajectoryTimes[jointIndex], desiredJointPositions[jointIndex]));
       return message;
    }
 
