@@ -1,9 +1,11 @@
 package us.ihmc.valkyrie.fingers;
 
 import controller_msgs.msg.dds.HandDesiredConfigurationMessage;
+import controller_msgs.msg.dds.OneDoFJointTrajectoryMessage;
 import controller_msgs.msg.dds.ValkyrieHandFingerTrajectoryMessage;
 import us.ihmc.humanoidRobotics.communication.packets.HumanoidMessageTools;
 import us.ihmc.humanoidRobotics.communication.packets.dataobjects.HandConfiguration;
+import us.ihmc.idl.IDLSequence.Object;
 import us.ihmc.robotics.robotSide.RobotSide;
 
 /**
@@ -145,5 +147,14 @@ public class ValkyrieHandFingerTrajectoryMessageConversion
             messageToPack.getDelayTimes().add(executionDelayTimes[i]);
          }
       }
+   }
+
+   public static final void appendDesiredFingerConfiguration(ValkyrieFingerMotorName motorNameToAppend, double time, double desiredConfiguration,
+                                                             ValkyrieHandFingerTrajectoryMessage messageToAppend)
+   {
+      messageToAppend.getFingerMotorNames().add(motorNameToAppend.toByte());
+      messageToAppend.getDelayTimes().add(0.0);
+      Object<OneDoFJointTrajectoryMessage> jointTrajectoryMessages = messageToAppend.getJointspaceTrajectory().getJointTrajectoryMessages();
+      jointTrajectoryMessages.add().set(HumanoidMessageTools.createOneDoFJointTrajectoryMessage(time, desiredConfiguration));
    }
 }
