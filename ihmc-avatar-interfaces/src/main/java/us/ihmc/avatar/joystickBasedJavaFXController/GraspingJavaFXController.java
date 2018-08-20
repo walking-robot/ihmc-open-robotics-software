@@ -50,6 +50,7 @@ import us.ihmc.manipulation.planning.manifold.ReachingManifoldTools;
 import us.ihmc.robotModels.FullHumanoidRobotModel;
 import us.ihmc.robotModels.FullHumanoidRobotModelFactory;
 import us.ihmc.robotics.robotSide.RobotSide;
+import us.ihmc.robotics.robotSide.SideDependentList;
 import us.ihmc.robotics.screwTheory.RigidBody;
 import us.ihmc.ros2.Ros2Node;
 
@@ -80,6 +81,13 @@ public class GraspingJavaFXController
    private final AtomicReference<Double> boxLength;
    private final AtomicReference<Double> boxWidth;
    private final AtomicReference<Double> boxHeight;
+
+   private final SideDependentList<AtomicReference<Boolean>> sendFingerMessages = new SideDependentList<>();
+   private final SideDependentList<AtomicReference<Double>> desiredThumbRolls = new SideDependentList<>();
+   private final SideDependentList<AtomicReference<Double>> desiredThumbPitchs = new SideDependentList<>();
+   private final SideDependentList<AtomicReference<Double>> desiredIndexes = new SideDependentList<>();
+   private final SideDependentList<AtomicReference<Double>> desiredMiddles = new SideDependentList<>();
+   private final SideDependentList<AtomicReference<Double>> desiredPinkys = new SideDependentList<>();
 
    private final AnimationTimer animationTimer;
 
@@ -145,6 +153,21 @@ public class GraspingJavaFXController
       boxWidth = messager.createInput(GraspingJavaFXTopics.BoxWidth);
       boxHeight = messager.createInput(GraspingJavaFXTopics.BoxHeight);
 
+      sendFingerMessages.put(RobotSide.RIGHT, messager.createInput(GraspingJavaFXTopics.RightSendMessage, false));
+      sendFingerMessages.put(RobotSide.LEFT, messager.createInput(GraspingJavaFXTopics.LeftSendMessage, false));
+      
+      desiredThumbRolls.put(RobotSide.RIGHT, messager.createInput(GraspingJavaFXTopics.RightThumbRoll, 0.0));
+      desiredThumbPitchs.put(RobotSide.RIGHT, messager.createInput(GraspingJavaFXTopics.RightThumb, 0.0));
+      desiredIndexes.put(RobotSide.RIGHT, messager.createInput(GraspingJavaFXTopics.RightIndex, 0.0));
+      desiredMiddles.put(RobotSide.RIGHT, messager.createInput(GraspingJavaFXTopics.RightMiddle, 0.0));
+      desiredPinkys.put(RobotSide.RIGHT, messager.createInput(GraspingJavaFXTopics.RightPinky, 0.0));
+      
+      desiredThumbRolls.put(RobotSide.LEFT, messager.createInput(GraspingJavaFXTopics.LeftThumbRoll, 0.0));
+      desiredThumbPitchs.put(RobotSide.LEFT, messager.createInput(GraspingJavaFXTopics.LeftThumb, 0.0));
+      desiredIndexes.put(RobotSide.LEFT, messager.createInput(GraspingJavaFXTopics.LeftIndex, 0.0));
+      desiredMiddles.put(RobotSide.LEFT, messager.createInput(GraspingJavaFXTopics.LeftMiddle, 0.0));
+      desiredPinkys.put(RobotSide.LEFT, messager.createInput(GraspingJavaFXTopics.LeftPinky, 0.0));
+
       messager.registerTopicListener(XBoxOneJavaFXController.ButtonSelectState, state -> clearObjects(state));
       messager.registerTopicListener(XBoxOneJavaFXController.ButtonStartState, state -> switchShapeToCreate(state));
       messager.registerTopicListener(XBoxOneJavaFXController.ButtonAState, state -> createObject(state));
@@ -182,8 +205,26 @@ public class GraspingJavaFXController
             updateSelectedObject();
             updateVisualizationObjects();
             rootNode.getChildren().add(motionPreviewVisualizer.getRootNode());
+            sendDesiredFingerConfigurationMessage();
          }
       };
+   }
+
+   private void sendDesiredFingerConfigurationMessage()
+   {
+      for (RobotSide robotSide : RobotSide.values)
+      {
+         if (sendFingerMessages.get(robotSide).get())
+         {
+            PrintTools.info("" + robotSide + " send message ");
+            PrintTools.info("" + desiredThumbRolls.get(robotSide).get());
+            PrintTools.info("" + desiredThumbPitchs.get(robotSide).get());
+            PrintTools.info("" + desiredIndexes.get(robotSide).get());
+            PrintTools.info("" + desiredMiddles.get(robotSide).get());
+            PrintTools.info("" + desiredPinkys.get(robotSide).get());
+            sendFingerMessages.get(robotSide).set(false);
+         }
+      }
    }
 
    private void consumeToolboxOutputStatus(WholeBodyTrajectoryToolboxOutputStatus packet)
@@ -504,7 +545,7 @@ public class GraspingJavaFXController
          children.addAll(objectsToVisualize);
       }
    }
-   
+
    public Point3DReadOnly getControlObjectPosition()
    {
       return controlPosition;

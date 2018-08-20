@@ -71,16 +71,16 @@
                   <Label alignment="CENTER" contentDisplay="CENTER" prefHeight="30.0" prefWidth="100.0" text="Pinky" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                </children>
             </AnchorPane>
-            <Slider fx:id="sliderLeftThumbRoll" blockIncrement="0.1" majorTickUnit="0.2" max="1.0" minorTickCount="1" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-            <Slider fx:id="sliderLeftThumb" blockIncrement="0.1" majorTickUnit="0.2" max="1.0" minorTickCount="1" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-            <Slider fx:id="sliderLeftIndex" blockIncrement="0.1" majorTickUnit="0.2" max="1.0" minorTickCount="1" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-            <Slider fx:id="sliderLeftMiddle" blockIncrement="0.1" majorTickUnit="0.2" max="1.0" minorTickCount="1" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-            <Slider fx:id="sliderLeftPinky" blockIncrement="0.1" majorTickUnit="0.2" max="1.0" minorTickCount="1" GridPane.columnIndex="1" GridPane.rowIndex="5" />
-            <Slider fx:id="sliderRightThumbRoll" blockIncrement="0.1" majorTickUnit="0.2" max="1.0" minorTickCount="1" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-            <Slider fx:id="sliderRightThumb" blockIncrement="0.1" majorTickUnit="0.2" max="1.0" minorTickCount="1" GridPane.columnIndex="2" GridPane.rowIndex="2" />
-            <Slider fx:id="sliderRightIndex" blockIncrement="0.1" majorTickUnit="0.2" max="1.0" minorTickCount="1" GridPane.columnIndex="2" GridPane.rowIndex="3" />
-            <Slider fx:id="sliderRightMiddle" blockIncrement="0.1" majorTickUnit="0.2" max="1.0" minorTickCount="1" GridPane.columnIndex="2" GridPane.rowIndex="4" />
-            <Slider fx:id="sliderRightPinky" blockIncrement="0.1" majorTickUnit="0.2" max="1.0" minorTickCount="1" GridPane.columnIndex="2" GridPane.rowIndex="5" />
+            <Slider fx:id="sliderLeftThumbRoll" majorTickUnit="0.01" max="1.0" minorTickCount="1" snapToTicks="true" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            <Slider fx:id="sliderLeftThumb" majorTickUnit="0.01" max="1.0" minorTickCount="1" snapToTicks="true" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+            <Slider fx:id="sliderLeftIndex" majorTickUnit="0.01" max="1.0" minorTickCount="1" snapToTicks="true" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+            <Slider fx:id="sliderLeftMiddle" majorTickUnit="0.01" max="1.0" minorTickCount="1" snapToTicks="true" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+            <Slider fx:id="sliderLeftPinky" majorTickUnit="0.01" max="1.0" minorTickCount="1" snapToTicks="true" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+            <Slider fx:id="sliderRightThumbRoll" majorTickUnit="0.01" max="1.0" minorTickCount="1" snapToTicks="true" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+            <Slider fx:id="sliderRightThumb" majorTickUnit="0.01" max="1.0" minorTickCount="1" snapToTicks="true" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+            <Slider fx:id="sliderRightIndex" majorTickUnit="0.01" max="1.0" minorTickCount="1" snapToTicks="true" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+            <Slider fx:id="sliderRightMiddle" majorTickUnit="0.01" max="1.0" minorTickCount="1" snapToTicks="true" GridPane.columnIndex="2" GridPane.rowIndex="4" />
+            <Slider fx:id="sliderRightPinky" majorTickUnit="0.01" max="1.0" minorTickCount="1" snapToTicks="true" GridPane.columnIndex="2" GridPane.rowIndex="5" />
          </children>
       </GridPane>
    </children>
