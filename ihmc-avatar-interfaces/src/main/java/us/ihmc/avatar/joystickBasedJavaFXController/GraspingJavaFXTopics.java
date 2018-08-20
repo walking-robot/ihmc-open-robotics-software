@@ -32,8 +32,8 @@ public class GraspingJavaFXTopics
    private static final TypedTopicTheme<Double> TubeRadius = apiFactory.createTypedTopicTheme("TubeRadius");
    private static final TypedTopicTheme<Double> Length = apiFactory.createTypedTopicTheme("Length");
    private static final TypedTopicTheme<Double> Width = apiFactory.createTypedTopicTheme("Width");
-   private static final TypedTopicTheme<Double> Roll = apiFactory.createTypedTopicTheme("Width");
-   private static final TypedTopicTheme<Double> Pitch = apiFactory.createTypedTopicTheme("Width");
+   private static final TypedTopicTheme<Double> Roll = apiFactory.createTypedTopicTheme("Roll");
+   private static final TypedTopicTheme<Double> Pitch = apiFactory.createTypedTopicTheme("Pitch");
    private static final TypedTopicTheme<Boolean> SendMessage = apiFactory.createTypedTopicTheme("SendMessage");
 
    private static final TypedTopicTheme<Integer> Selected = apiFactory.createTypedTopicTheme("Selected");
