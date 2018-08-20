@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import controller_msgs.msg.dds.ReachingManifoldMessage;
 import controller_msgs.msg.dds.ToolboxStateMessage;
+import controller_msgs.msg.dds.ValkyrieHandFingerTrajectoryMessage;
 import controller_msgs.msg.dds.WholeBodyTrajectoryMessage;
 import controller_msgs.msg.dds.WholeBodyTrajectoryToolboxMessage;
 import controller_msgs.msg.dds.WholeBodyTrajectoryToolboxOutputStatus;
@@ -41,6 +42,7 @@ import us.ihmc.euclid.tuple4D.Quaternion;
 import us.ihmc.graphicsDescription.MeshDataBuilder;
 import us.ihmc.graphicsDescription.MeshDataGenerator;
 import us.ihmc.graphicsDescription.MeshDataHolder;
+import us.ihmc.humanoidRobotics.communication.packets.HumanoidMessageTools;
 import us.ihmc.humanoidRobotics.communication.packets.WholeBodyTrajectoryToolboxOutputConverter;
 import us.ihmc.javaFXToolkit.JavaFXTools;
 import us.ihmc.javaFXToolkit.graphics.JavaFXMeshDataInterpreter;
@@ -97,6 +99,8 @@ public class GraspingJavaFXController
    private final Point3D controlPosition = new Point3D(defaultPositionToCreateObject);
    private final RotationMatrix controlOrientation = new RotationMatrix();
 
+   private final static double timeDurationForFinger = 2.0;
+
    private final static double ratioJoyStickToPosition = 0.01;
    private final static double ratioJoyStickToRotation = 0.02;
 
@@ -116,6 +120,7 @@ public class GraspingJavaFXController
    private final IHMCROS2Publisher<WholeBodyTrajectoryMessage> wholeBodyTrajectoryPublisher;
    private final IHMCROS2Publisher<ToolboxStateMessage> toolboxStatePublisher;
    private final IHMCROS2Publisher<WholeBodyTrajectoryToolboxMessage> toolboxMessagePublisher;
+   private final IHMCROS2Publisher<ValkyrieHandFingerTrajectoryMessage> handFingerTrajectoryMessagePublisher;
 
    private final AtomicReference<WholeBodyTrajectoryToolboxOutputStatus> toolboxOutputPacket = new AtomicReference<>(null);
    private final GraspingJavaFXMotionPreviewVisualizer motionPreviewVisualizer;
@@ -155,13 +160,13 @@ public class GraspingJavaFXController
 
       sendFingerMessages.put(RobotSide.RIGHT, messager.createInput(GraspingJavaFXTopics.RightSendMessage, false));
       sendFingerMessages.put(RobotSide.LEFT, messager.createInput(GraspingJavaFXTopics.LeftSendMessage, false));
-      
+
       desiredThumbRolls.put(RobotSide.RIGHT, messager.createInput(GraspingJavaFXTopics.RightThumbRoll, 0.0));
       desiredThumbPitchs.put(RobotSide.RIGHT, messager.createInput(GraspingJavaFXTopics.RightThumb, 0.0));
       desiredIndexes.put(RobotSide.RIGHT, messager.createInput(GraspingJavaFXTopics.RightIndex, 0.0));
       desiredMiddles.put(RobotSide.RIGHT, messager.createInput(GraspingJavaFXTopics.RightMiddle, 0.0));
       desiredPinkys.put(RobotSide.RIGHT, messager.createInput(GraspingJavaFXTopics.RightPinky, 0.0));
-      
+
       desiredThumbRolls.put(RobotSide.LEFT, messager.createInput(GraspingJavaFXTopics.LeftThumbRoll, 0.0));
       desiredThumbPitchs.put(RobotSide.LEFT, messager.createInput(GraspingJavaFXTopics.LeftThumb, 0.0));
       desiredIndexes.put(RobotSide.LEFT, messager.createInput(GraspingJavaFXTopics.LeftIndex, 0.0));
@@ -193,6 +198,7 @@ public class GraspingJavaFXController
       wholeBodyTrajectoryPublisher = ROS2Tools.createPublisher(ros2Node, WholeBodyTrajectoryMessage.class, subscriberTopicNameGenerator);
       toolboxStatePublisher = ROS2Tools.createPublisher(ros2Node, ToolboxStateMessage.class, toolboxRequestTopicNameGenerator);
       toolboxMessagePublisher = ROS2Tools.createPublisher(ros2Node, WholeBodyTrajectoryToolboxMessage.class, toolboxRequestTopicNameGenerator);
+      handFingerTrajectoryMessagePublisher = ROS2Tools.createPublisher(ros2Node, ValkyrieHandFingerTrajectoryMessage.class, subscriberTopicNameGenerator);
 
       ROS2Tools.createCallbackSubscription(ros2Node, WholeBodyTrajectoryToolboxOutputStatus.class, toolboxResponseTopicNameGenerator,
                                            s -> consumeToolboxOutputStatus(s.takeNextData()));
@@ -223,6 +229,18 @@ public class GraspingJavaFXController
             PrintTools.info("" + desiredMiddles.get(robotSide).get());
             PrintTools.info("" + desiredPinkys.get(robotSide).get());
             sendFingerMessages.get(robotSide).set(false);
+
+            ValkyrieHandFingerTrajectoryMessage message = new ValkyrieHandFingerTrajectoryMessage();
+            message.setRobotSide(robotSide.toByte());
+
+            HumanoidMessageTools.appendDesiredFingerConfiguration((byte) 0, timeDurationForFinger, desiredThumbRolls.get(robotSide).get(), message);
+            HumanoidMessageTools.appendDesiredFingerConfiguration((byte) 1, timeDurationForFinger, desiredThumbPitchs.get(robotSide).get(), message);
+
+            HumanoidMessageTools.appendDesiredFingerConfiguration((byte) 3, timeDurationForFinger, desiredIndexes.get(robotSide).get(), message);
+            HumanoidMessageTools.appendDesiredFingerConfiguration((byte) 4, timeDurationForFinger, desiredMiddles.get(robotSide).get(), message);
+            HumanoidMessageTools.appendDesiredFingerConfiguration((byte) 5, timeDurationForFinger, desiredPinkys.get(robotSide).get(), message);
+
+            handFingerTrajectoryMessagePublisher.publish(message);
          }
       }
    }
