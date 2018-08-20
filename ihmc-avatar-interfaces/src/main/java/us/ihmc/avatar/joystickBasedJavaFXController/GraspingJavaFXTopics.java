@@ -34,6 +34,7 @@ public class GraspingJavaFXTopics
    private static final TypedTopicTheme<Double> Width = apiFactory.createTypedTopicTheme("Width");
    private static final TypedTopicTheme<Double> Roll = apiFactory.createTypedTopicTheme("Roll");
    private static final TypedTopicTheme<Double> Pitch = apiFactory.createTypedTopicTheme("Pitch");
+   private static final TypedTopicTheme<Double> Pitch2 = apiFactory.createTypedTopicTheme("Pitch2");
    private static final TypedTopicTheme<Boolean> SendMessage = apiFactory.createTypedTopicTheme("SendMessage");
 
    private static final TypedTopicTheme<Integer> Selected = apiFactory.createTypedTopicTheme("Selected");
@@ -48,11 +49,13 @@ public class GraspingJavaFXTopics
    public static final Topic<Double> BoxHeight = Root.child(GraspingObject).child(Box).topic(Height);
    public static final Topic<Double> LeftThumbRoll = Root.child(FingerControl).child(Left).child(Thumb).topic(Roll);
    public static final Topic<Double> LeftThumb = Root.child(FingerControl).child(Left).child(Thumb).topic(Pitch);
+   public static final Topic<Double> LeftThumb2 = Root.child(FingerControl).child(Left).child(Thumb).topic(Pitch2);
    public static final Topic<Double> LeftIndex = Root.child(FingerControl).child(Left).child(Index).topic(Pitch);
    public static final Topic<Double> LeftMiddle = Root.child(FingerControl).child(Left).child(Middle).topic(Pitch);
    public static final Topic<Double> LeftPinky = Root.child(FingerControl).child(Left).child(Pinky).topic(Pitch);
    public static final Topic<Double> RightThumbRoll = Root.child(FingerControl).child(Right).child(Thumb).topic(Roll);
    public static final Topic<Double> RightThumb = Root.child(FingerControl).child(Right).child(Thumb).topic(Pitch);
+   public static final Topic<Double> RightThumb2 = Root.child(FingerControl).child(Right).child(Thumb).topic(Pitch2);
    public static final Topic<Double> RightIndex = Root.child(FingerControl).child(Right).child(Index).topic(Pitch);
    public static final Topic<Double> RightMiddle = Root.child(FingerControl).child(Right).child(Middle).topic(Pitch);
    public static final Topic<Double> RightPinky = Root.child(FingerControl).child(Right).child(Pinky).topic(Pitch);

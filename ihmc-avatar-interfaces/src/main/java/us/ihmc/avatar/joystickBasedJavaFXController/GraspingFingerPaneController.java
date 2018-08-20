@@ -18,6 +18,9 @@ public class GraspingFingerPaneController
 
    @FXML
    private Slider sliderLeftThumb;
+   
+   @FXML
+   private Slider sliderLeftThumb2;
 
    @FXML
    private Slider sliderLeftIndex;
@@ -30,6 +33,9 @@ public class GraspingFingerPaneController
 
    @FXML
    private Slider sliderRightThumb;
+   
+   @FXML
+   private Slider sliderRightThumb2;
 
    @FXML
    private Slider sliderRightIndex;
@@ -57,11 +63,13 @@ public class GraspingFingerPaneController
       messager.bindBidirectional(GraspingJavaFXTopics.RightThumbRoll, sliderRightThumbRoll.valueProperty(), createConverter(), true);
 
       messager.bindBidirectional(GraspingJavaFXTopics.LeftThumb, sliderLeftThumb.valueProperty(), createConverter(), true);
+      messager.bindBidirectional(GraspingJavaFXTopics.LeftThumb2, sliderLeftThumb2.valueProperty(), createConverter(), true);
       messager.bindBidirectional(GraspingJavaFXTopics.LeftIndex, sliderLeftIndex.valueProperty(), createConverter(), true);
       messager.bindBidirectional(GraspingJavaFXTopics.LeftMiddle, sliderLeftMiddle.valueProperty(), createConverter(), true);
       messager.bindBidirectional(GraspingJavaFXTopics.LeftPinky, sliderLeftPinky.valueProperty(), createConverter(), true);
 
       messager.bindBidirectional(GraspingJavaFXTopics.RightThumb, sliderRightThumb.valueProperty(), createConverter(), true);
+      messager.bindBidirectional(GraspingJavaFXTopics.RightThumb2, sliderRightThumb2.valueProperty(), createConverter(), true);
       messager.bindBidirectional(GraspingJavaFXTopics.RightIndex, sliderRightIndex.valueProperty(), createConverter(), true);
       messager.bindBidirectional(GraspingJavaFXTopics.RightMiddle, sliderRightMiddle.valueProperty(), createConverter(), true);
       messager.bindBidirectional(GraspingJavaFXTopics.RightPinky, sliderRightPinky.valueProperty(), createConverter(), true);

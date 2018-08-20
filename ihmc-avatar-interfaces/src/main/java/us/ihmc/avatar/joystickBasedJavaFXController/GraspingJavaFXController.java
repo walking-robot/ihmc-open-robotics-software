@@ -87,6 +87,7 @@ public class GraspingJavaFXController
    private final SideDependentList<AtomicReference<Boolean>> sendFingerMessages = new SideDependentList<>();
    private final SideDependentList<AtomicReference<Double>> desiredThumbRolls = new SideDependentList<>();
    private final SideDependentList<AtomicReference<Double>> desiredThumbPitchs = new SideDependentList<>();
+   private final SideDependentList<AtomicReference<Double>> desiredThumbPitch2s = new SideDependentList<>();
    private final SideDependentList<AtomicReference<Double>> desiredIndexes = new SideDependentList<>();
    private final SideDependentList<AtomicReference<Double>> desiredMiddles = new SideDependentList<>();
    private final SideDependentList<AtomicReference<Double>> desiredPinkys = new SideDependentList<>();
@@ -163,12 +164,14 @@ public class GraspingJavaFXController
 
       desiredThumbRolls.put(RobotSide.RIGHT, messager.createInput(GraspingJavaFXTopics.RightThumbRoll, 0.0));
       desiredThumbPitchs.put(RobotSide.RIGHT, messager.createInput(GraspingJavaFXTopics.RightThumb, 0.0));
+      desiredThumbPitch2s.put(RobotSide.RIGHT, messager.createInput(GraspingJavaFXTopics.RightThumb2, 0.0));
       desiredIndexes.put(RobotSide.RIGHT, messager.createInput(GraspingJavaFXTopics.RightIndex, 0.0));
       desiredMiddles.put(RobotSide.RIGHT, messager.createInput(GraspingJavaFXTopics.RightMiddle, 0.0));
       desiredPinkys.put(RobotSide.RIGHT, messager.createInput(GraspingJavaFXTopics.RightPinky, 0.0));
 
       desiredThumbRolls.put(RobotSide.LEFT, messager.createInput(GraspingJavaFXTopics.LeftThumbRoll, 0.0));
       desiredThumbPitchs.put(RobotSide.LEFT, messager.createInput(GraspingJavaFXTopics.LeftThumb, 0.0));
+      desiredThumbPitch2s.put(RobotSide.LEFT, messager.createInput(GraspingJavaFXTopics.LeftThumb2, 0.0));
       desiredIndexes.put(RobotSide.LEFT, messager.createInput(GraspingJavaFXTopics.LeftIndex, 0.0));
       desiredMiddles.put(RobotSide.LEFT, messager.createInput(GraspingJavaFXTopics.LeftMiddle, 0.0));
       desiredPinkys.put(RobotSide.LEFT, messager.createInput(GraspingJavaFXTopics.LeftPinky, 0.0));
@@ -222,12 +225,6 @@ public class GraspingJavaFXController
       {
          if (sendFingerMessages.get(robotSide).get())
          {
-            PrintTools.info("" + robotSide + " send message ");
-            PrintTools.info("" + desiredThumbRolls.get(robotSide).get());
-            PrintTools.info("" + desiredThumbPitchs.get(robotSide).get());
-            PrintTools.info("" + desiredIndexes.get(robotSide).get());
-            PrintTools.info("" + desiredMiddles.get(robotSide).get());
-            PrintTools.info("" + desiredPinkys.get(robotSide).get());
             sendFingerMessages.get(robotSide).set(false);
 
             ValkyrieHandFingerTrajectoryMessage message = new ValkyrieHandFingerTrajectoryMessage();
@@ -235,7 +232,7 @@ public class GraspingJavaFXController
 
             HumanoidMessageTools.appendDesiredFingerConfiguration((byte) 0, timeDurationForFinger, desiredThumbRolls.get(robotSide).get(), message);
             HumanoidMessageTools.appendDesiredFingerConfiguration((byte) 1, timeDurationForFinger, desiredThumbPitchs.get(robotSide).get(), message);
-
+            HumanoidMessageTools.appendDesiredFingerConfiguration((byte) 2, timeDurationForFinger, desiredThumbPitch2s.get(robotSide).get(), message);
             HumanoidMessageTools.appendDesiredFingerConfiguration((byte) 3, timeDurationForFinger, desiredIndexes.get(robotSide).get(), message);
             HumanoidMessageTools.appendDesiredFingerConfiguration((byte) 4, timeDurationForFinger, desiredMiddles.get(robotSide).get(), message);
             HumanoidMessageTools.appendDesiredFingerConfiguration((byte) 5, timeDurationForFinger, desiredPinkys.get(robotSide).get(), message);
